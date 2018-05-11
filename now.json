@@ -1,0 +1,7 @@
+{
+  "name": "spotify-playlists-extended",
+  "alias": "spotify-playlists-extended",
+	"env": {
+		"NODE_ENV": "production"
+	}
+}
