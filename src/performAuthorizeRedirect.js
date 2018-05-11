@@ -1,5 +1,3 @@
-const urlJoin = require('url-join')
-
 const SPOTIFY_PLAYLISTS_EXTENDED_CLIENT_ID = process.env.REACT_APP_SPOTIFY_CLIENT_ID
 const REDIRECT_URI =
   process.env.NODE_ENV === 'production'

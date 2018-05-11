@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "invariant": "^2.2.4",
+    "lodash": "^4.17.10",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
     "react-scripts": "1.1.4",
@@ -11,8 +12,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+		"build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test --env=jsdom",
-		"deploy": "npm run build && cd build && now --public --local-config=../now.json && now alias --local-config=../now.json"
+    "deploy": "rm -rf build && npm run build && cd build && now --public --local-config=../now.json && now alias --local-config=../now.json"
   }
 }

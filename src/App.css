@@ -2,3 +2,37 @@
 	margin: 20px;
 }
 
+input {
+	padding: 8px;
+	border: 2px solid #222;
+	opacity: .8;
+	outline: none;
+	border-radius: 5px;
+	font-size: 16px;
+}
+
+input:active {
+	padding: 8px;
+	border: 2px solid #222;
+	opacity: 1;
+}
+
+input:focus {
+	padding: 8px;
+	border: 2px solid #;
+	opacity: 1;
+}
+
+a {
+	display: inline-block;
+	/* padding-top: 16px; */
+	/* padding-bottom: 16px; */
+	padding-left: 16px;
+	color: #222;
+	text-decoration: none;
+}
+
+
+a:hover {
+	opacity: .8;
+}
