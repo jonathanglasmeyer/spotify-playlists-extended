@@ -8,11 +8,12 @@
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
     "react-scripts": "1.1.4",
+    "react-swipeable-bottom-sheet": "^1.1.1",
     "url-join": "^4.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
-		"build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "deploy": "rm -rf build && npm run build && cd build && now --public --local-config=../now.json && now alias --local-config=../now.json"
   }
