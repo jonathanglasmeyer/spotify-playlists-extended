@@ -3,11 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "classnames": "^2.2.5",
     "invariant": "^2.2.4",
     "lodash": "^4.17.10",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
+    "react-key-handler": "^1.0.1",
+    "react-lazy-image": "^1.1.0",
+    "react-notification-system": "^0.2.17",
+    "react-rating": "^1.1.2",
     "react-scripts": "1.1.4",
+    "react-simple-dropdown": "^3.2.0",
     "react-swipeable-bottom-sheet": "^1.1.1",
     "url-join": "^4.0.0"
   },
