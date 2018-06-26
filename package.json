@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/core": "^1.2.1",
     "classnames": "^2.2.5",
     "invariant": "^2.2.4",
     "lodash": "^4.17.10",

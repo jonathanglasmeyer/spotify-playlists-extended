@@ -1,4 +1,9 @@
 import React, {Component} from 'react'
+import CssBaseline from '@material-ui/core/CssBaseline'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import Checkbox from '@material-ui/core/Checkbox'
+import Switch from '@material-ui/core/Switch'
 import classnames from 'classnames'
 import Rating from 'react-rating'
 import SwipeableBottomSheet from 'react-swipeable-bottom-sheet'
@@ -78,6 +83,18 @@ const normalizeString = s =>
 
 const RATING_REGEX = /^\((1|1\.5|2|2\.5|3|3\.5|4|4\.5|5|5\.5)\)/
 const GENRE_REGEX = /(\.[a-z?]+)/
+
+const materialUITheme = createMuiTheme({
+palette: {
+    secondary: {main: '#222'},
+  },
+  typography: {
+    // Use the system font.
+    fontFamily:
+      '-apple-system,system-ui,BlinkMacSystemFont,' +
+      '"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif',
+  },
+})
 
 const ratingStyle = {
   display: 'inline-block',
@@ -222,274 +239,283 @@ class App extends Component {
       // This will be not visible as the playlists then load very fast from localStorage
       if (!playlists && !MOCK) return <div />
       return (
-        <div className="App">
-          <div>
-            {this.state.albumsWithNoMatchingPlaylist &&
-              this.state.albumsWithNoMatchingPlaylist.length && (
-                <div className="bottom-overlay">
-                  <h4>Unimported albums</h4>
-                  <div>
-                    {this.state.albumsWithNoMatchingPlaylist.map(album => (
-                      <div key={album.id}>{album.playlistName}</div>
-                    ))}
+        <MuiThemeProvider theme={materialUITheme}>
+          <div className="App">
+            <div>
+              {this.state.albumsWithNoMatchingPlaylist &&
+                this.state.albumsWithNoMatchingPlaylist.length && (
+                  <div className="bottom-overlay">
+                    <h4>Unimported albums</h4>
+                    <div>
+                      {this.state.albumsWithNoMatchingPlaylist.map(album => (
+                        <div key={album.id}>{album.playlistName}</div>
+                      ))}
+                    </div>
+                    <div style={{marginTop: 20}}>
+                      <button
+                        disabled={this.state.importingAlbums}
+                        onClick={this._importPlaylistsFromAlbums}>
+                        Import
+                      </button>
+                    </div>
                   </div>
-                  <div style={{marginTop: 20}}>
-                    <button
-                      disabled={this.state.importingAlbums}
-                      onClick={this._importPlaylistsFromAlbums}>
-                      Import
-                    </button>
-                  </div>
+                )}
+              <div style={listStyles.genrePills}>
+                {Object.keys(GENRES).map(genre => {
+                  return (
+                    <div
+                      className={classnames(
+                        'genrepill',
+                        this.state.activeGenre === genre && 'genrepill-active'
+                      )}
+                      key={genre}
+                      onClick={() =>
+                        this.setState({
+                          activeGenre: this.state.activeGenre === genre ? null : genre,
+                        })
+                      }>
+                      {GENRES[genre]}{' '}
+                      <span style={{display: 'inline-block', minWidth: 20}}>
+                        {`(${getCountForGenre(genre, playlists)})`}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+              <div style={{position: 'relative'}}>
+                <input
+                  autoFocus
+                  style={{width: '100%', borderRadius: 3}}
+                  className="filter-input"
+                  placeholder="Filter"
+                  type="search"
+                  value={this.state.filter}
+                  onChange={e => this.setState({filter: e.target.value})}
+                />
+                {this.state.filter &&
+                  this.state.filter.length && (
+                    <div onClick={this._resetFilter} className={'input-cross-icon'}>
+                      {crossIcon}
+                    </div>
+                  )}
+              </div>
+            </div>
+            <div style={{marginTop: 20, marginBottom: 5}}>
+              {playlistsSearchResult && (
+                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                  <span style={listStyles.resultsHint}>{`${
+                    !this.state.filter ? playlists.length : playlistsSearchResult.length
+                  } result(s)`}</span>
+                  <FormControlLabel
+								style={{marginTop: -20, marginRight: 2}}
+                    control={
+                      <Switch
+                        value={this.state.checkedA}
+                        onChange={e => this.setState({unratedOnly: e.target.checked})}
+                      />
+                    }
+                    label="Unrated only"
+                  />
                 </div>
               )}
-            <div style={listStyles.genrePills}>
-              {Object.keys(GENRES).map(genre => {
+            </div>
+            {playlistsSearchResult &&
+              playlistsSearchResult.map(extendedPlaylist => {
                 return (
                   <div
-                    className={classnames(
-                      'genrepill',
-                      this.state.activeGenre === genre && 'genrepill-active'
-                    )}
-                    key={genre}
-                    onClick={() =>
-                      this.setState({
-                        activeGenre: this.state.activeGenre === genre ? null : genre,
+                    onClick={() => {
+                      this.setState({detailsView: extendedPlaylist, open: true}, async () => {
+                        const playlistFull = await this.api.getPlaylistFull(extendedPlaylist.id)
+                        this.setState({detailsView: makeExtendedPlaylistObject(playlistFull)})
                       })
-                    }>
-                    {GENRES[genre]}{' '}
-                    <span style={{display: 'inline-block', minWidth: 20}}>
-                      {`(${getCountForGenre(genre, playlists)})`}
-                    </span>
+                    }}
+                    key={extendedPlaylist.id}
+                    className={'item'}
+                    style={{
+                      display: 'flex',
+                      userSelect: 'none',
+                      alignItems: 'flex-start',
+                      marginLeft: isMobile ? 0 : -10,
+                      paddingLeft: isMobile ? 0 : 10,
+                      paddingTop: 10,
+                      paddingBottom: 10,
+                    }}>
+                    <img
+                      alt="album-art"
+                      style={listStyles.image}
+                      src={_.get(extendedPlaylist, 'images[0].url')}
+                    />
+                    <div style={listStyles.itemMainWrapper}>
+                      <span className="item-title" style={listStyles.itemTitle}>
+                        {extendedPlaylist.name}
+                      </span>
+                      {extendedPlaylist.rating && <SimpleRating rating={extendedPlaylist.rating} />}
+                    </div>
                   </div>
                 )
               })}
-            </div>
-            <div style={{position: 'relative'}}>
-              <input
-                autoFocus
-                style={{width: '100%', borderRadius: 3}}
-                className="filter-input"
-                placeholder="Filter"
-                type="search"
-                value={this.state.filter}
-                onChange={e => this.setState({filter: e.target.value})}
-              />
-              {this.state.filter &&
-                this.state.filter.length && (
-                  <div onClick={this._resetFilter} className={'input-cross-icon'}>
-                    {crossIcon}
-                  </div>
-                )}
-            </div>
-          </div>
-          <div style={{marginTop: 20, marginBottom: 5}}>
-            {playlistsSearchResult && (
-              <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                <span style={listStyles.resultsHint}>{`${
-                  !this.state.filter ? playlists.length : playlistsSearchResult.length
-                } result(s)`}</span>
-                <label htmlFor="unratedOnly">
-                  Unrated only
-                  <input
-                    onChange={e => this.setState({unratedOnly: e.target.checked})}
-                    type="checkbox"
-                    id="unratedOnly"
-                  />
-                </label>
-              </div>
-            )}
-          </div>
-          {playlistsSearchResult &&
-            playlistsSearchResult.map(extendedPlaylist => {
-              return (
+            <SwipeableBottomSheet
+              bodyStyle={{
+                backgroundColor: 'transparent',
+                maxWidth: 500,
+                backgroundColor: isMobile ? 'white' : undefined,
+                margin: '0 auto',
+                ...(!isMobile ? {maxHeight: undefined} : {}),
+              }}
+              onChange={open => this.setState({open})}
+              topShadow={isMobile}
+              swipeableViewsProps={!isMobile ? {animateTransitions: false} : {}}
+              onTransitionEnd={() => this.setState({detailsView: null})}
+              marginTop={isMobile ? 0 : 40}
+              fullScreen
+              open={this.state.open}>
+              {this.state.detailsView ? (
                 <div
-                  onClick={() => {
-                    this.setState({detailsView: extendedPlaylist, open: true}, async () => {
-                      const playlistFull = await this.api.getPlaylistFull(extendedPlaylist.id)
-                      this.setState({detailsView: makeExtendedPlaylistObject(playlistFull)})
-                    })
-                  }}
-                  key={extendedPlaylist.id}
-                  className={'item'}
                   style={{
-                    display: 'flex',
-                    userSelect: 'none',
-                    alignItems: 'flex-start',
-                    marginLeft: isMobile ? 0 : -10,
-                    paddingLeft: isMobile ? 0 : 10,
-                    paddingTop: 10,
-                    paddingBottom: 10,
+                    borderTopLeftRadius: BORDER_RADIUS,
+                    position: 'relative',
+                    borderTopRightRadius: BORDER_RADIUS,
+                    // overflowY: 'auto',
+                    // height: isMobile ? '100vh' : undefined,
+                    height: isMobile ? '100vh' : undefined,
+                    backgroundColor: 'white',
                   }}>
-                  <img
-                    alt="album-art"
-                    style={listStyles.image}
-                    src={_.get(extendedPlaylist, 'images[0].url')}
-                  />
-                  <div style={listStyles.itemMainWrapper}>
-                    <span className="item-title" style={listStyles.itemTitle}>
-                      {extendedPlaylist.name}
-                    </span>
-                    {extendedPlaylist.rating && <SimpleRating rating={extendedPlaylist.rating} />}
-                  </div>
-                </div>
-              )
-            })}
-          <SwipeableBottomSheet
-            bodyStyle={{
-              backgroundColor: 'transparent',
-              maxWidth: 500,
-              backgroundColor: isMobile ? 'white' : undefined,
-              margin: '0 auto',
-              ...(!isMobile ? {maxHeight: undefined} : {}),
-            }}
-            onChange={open => this.setState({open})}
-            topShadow={isMobile}
-            swipeableViewsProps={!isMobile ? {animateTransitions: false} : {}}
-            onTransitionEnd={() => this.setState({detailsView: null})}
-            marginTop={isMobile ? 0 : 40}
-            fullScreen
-            open={this.state.open}>
-            {this.state.detailsView ? (
-              <div
-                style={{
-                  borderTopLeftRadius: BORDER_RADIUS,
-                  position: 'relative',
-                  borderTopRightRadius: BORDER_RADIUS,
-                  // overflowY: 'auto',
-                  // height: isMobile ? '100vh' : undefined,
-                  height: isMobile ? '100vh' : undefined,
-                  backgroundColor: 'white',
-                }}>
-                <div
-                  onClick={() => this.setState({open: false})}
-                  onWheel={e => e.preventDefault()}
-                  style={{
-                    position: 'fixed',
-                    top: 0,
-                    width: (window.innerWidth - 500) / 2,
-                    left: 0,
-                    bottom: 0,
-                  }}
-                />
-                <div
-                  onClick={() => this.setState({open: false})}
-                  onWheel={e => e.preventDefault()}
-                  style={{
-                    position: 'fixed',
-                    top: 0,
-                    width: (window.innerWidth - 500) / 2,
-                    right: 0,
-                    bottom: 0,
-                  }}
-                />
-                <div className="top-nav-wrapper">
                   <div
                     onClick={() => this.setState({open: false})}
-                    className="top-nav-bar-button chevron-up-icon">
-                    {chevronDownIcon}
-                  </div>
-                  <div style={{display: 'flex'}}>
-                    <div
-                      onClick={this._handleDeletePlaylist}
-                      className="top-nav-bar-button delete-icon">
-                      {deleteIcon}
-                    </div>
-                    <Dropdown ref={dropdown => (this.dropdown = dropdown)}>
-                      <DropdownTrigger>
-                        <div className="top-nav-bar-button folder-icon">{folderIcon}</div>
-                      </DropdownTrigger>
-                      <DropdownContent>
-                        {Object.keys(GENRES).map(genre => {
-                          return (
-                            <div
-                              onClick={() => this._handleChangeGenre(genre)}
-                              key={genre}
-                              className="dropdown-list-item"
-                              style={{
-                                fontWeight: genre === this.state.detailsView.genre ? 700 : 400,
-                              }}>
-                              {GENRES[genre]}
-                            </div>
-                          )
-                        })}
-                      </DropdownContent>
-                    </Dropdown>
-                  </div>
-                </div>
-                <div style={{position: 'relative', margin: 0}}>
-                  <img
-                    alt="album-art"
+                    onWheel={e => e.preventDefault()}
                     style={{
-                      boxShadow: '1px 1px 20px hsl(192, 22%, 95%)',
-                      borderRadius: BORDER_RADIUS,
-                      width: '100%',
-                      height: isMobile ? window.innerWidth : undefined,
-                      backgroundColor: 'hsl(192, 22%, 95%)',
+                      position: 'fixed',
+                      top: 0,
+                      width: (window.innerWidth - 500) / 2,
+                      left: 0,
+                      bottom: 0,
                     }}
-                    src={this.state.detailsView.images && this.state.detailsView.images.length ? this.state.detailsView.images[0].url : undefined}
                   />
-
-                  <div style={styles.fabWrapper}>
-                    <a
-                      className="fab"
-                      href={
-                        window.innerWidth < 400
-                          ? this.state.detailsView.external_urls.spotify
-                          : this.state.detailsView.uri
-                      }>
-                      <svg height="18" viewBox="0 0 22 28" width="14" fill="white">
-                        <path
-                          d="m440.415 583.554-18.997-12.243c-1.127-.607-2.418-.544-2.418 1.635v24.108c0 1.992 1.385 2.306 2.418 1.635l18.997-12.243c.782-.799.782-2.093 0-2.892"
-                          fillRule="evenodd"
-                          transform="translate(-419 -571)"
-                        />
-                      </svg>
-                    </a>
+                  <div
+                    onClick={() => this.setState({open: false})}
+                    onWheel={e => e.preventDefault()}
+                    style={{
+                      position: 'fixed',
+                      top: 0,
+                      width: (window.innerWidth - 500) / 2,
+                      right: 0,
+                      bottom: 0,
+                    }}
+                  />
+                  <div className="top-nav-wrapper">
+                    <div
+                      onClick={() => this.setState({open: false})}
+                      className="top-nav-bar-button chevron-up-icon">
+                      {chevronDownIcon}
+                    </div>
+                    <div style={{display: 'flex'}}>
+                      <div
+                        onClick={this._handleDeletePlaylist}
+                        className="top-nav-bar-button delete-icon">
+                        {deleteIcon}
+                      </div>
+                      <Dropdown ref={dropdown => (this.dropdown = dropdown)}>
+                        <DropdownTrigger>
+                          <div className="top-nav-bar-button folder-icon">{folderIcon}</div>
+                        </DropdownTrigger>
+                        <DropdownContent>
+                          {Object.keys(GENRES).map(genre => {
+                            return (
+                              <div
+                                onClick={() => this._handleChangeGenre(genre)}
+                                key={genre}
+                                className="dropdown-list-item"
+                                style={{
+                                  fontWeight: genre === this.state.detailsView.genre ? 700 : 400,
+                                }}>
+                                {GENRES[genre]}
+                              </div>
+                            )
+                          })}
+                        </DropdownContent>
+                      </Dropdown>
+                    </div>
                   </div>
-                </div>
-                <div style={{margin: 16, marginTop: 16, overflowY: 'auto', overflowX: 'hidden'}}>
-                  <div style={styles.title}>{this.state.detailsView.name}</div>
-                  <div style={{marginBottom: 8, opacity: this.state.detailsView.rating ? 1 : 0.4}}>
-                    <Rating
-                      onChange={this._handleUpdateRating}
-                      initialRating={this.state.detailsView.rating}
-                      emptySymbol={emptyRatingElement}
-                      placeholderSymbol={placeholderRatingElement}
-                      fullSymbol={ratingElement}
-                    />
-                  </div>
-                  {this.state.detailsView.description !== undefined ? (
-                    <textarea
-                      ref={r => (this.textarea = r)}
-                      placeholder="Add a review"
-                      rows={5}
-                      onKeyDown={e => {
-                        if (e.keyCode === ENTER) {
-                          e.preventDefault()
-                          this._handleSubmitDescription(this.textarea.value)
-                          this.textarea.blur()
-                        }
+                  <div style={{position: 'relative', margin: 0}}>
+                    <img
+                      alt="album-art"
+                      style={{
+                        boxShadow: '1px 1px 20px hsl(192, 22%, 95%)',
+                        borderRadius: BORDER_RADIUS,
+                        width: '100%',
+                        height: isMobile ? window.innerWidth : undefined,
+                        backgroundColor: 'hsl(192, 22%, 95%)',
                       }}
-                      onBlur={e => this._handleSubmitDescription(e.target.value)}
-                      defaultValue={
-                        this.state.detailsView.description &&
-                        this.state.detailsView.description.length
-                          ? this.state.detailsView.description
+                      src={
+                        this.state.detailsView.images && this.state.detailsView.images.length
+                          ? this.state.detailsView.images[0].url
                           : undefined
                       }
-                      style={styles.description}
                     />
-                  ) : (
-                    <div style={{backgroundColor: 'white', height: TEXTAREA_HEIGHT}} />
-                  )}
+
+                    <div style={styles.fabWrapper}>
+                      <a
+                        className="fab"
+                        href={
+                          window.innerWidth < 400
+                            ? this.state.detailsView.external_urls.spotify
+                            : this.state.detailsView.uri
+                        }>
+                        <svg height="18" viewBox="0 0 22 28" width="14" fill="white">
+                          <path
+                            d="m440.415 583.554-18.997-12.243c-1.127-.607-2.418-.544-2.418 1.635v24.108c0 1.992 1.385 2.306 2.418 1.635l18.997-12.243c.782-.799.782-2.093 0-2.892"
+                            fillRule="evenodd"
+                            transform="translate(-419 -571)"
+                          />
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                  <div style={{margin: 16, marginTop: 16, overflowY: 'auto', overflowX: 'hidden'}}>
+                    <div style={styles.title}>{this.state.detailsView.name}</div>
+                    <div
+                      style={{marginBottom: 8, opacity: this.state.detailsView.rating ? 1 : 0.4}}>
+                      <Rating
+                        onChange={this._handleUpdateRating}
+                        initialRating={this.state.detailsView.rating}
+                        emptySymbol={emptyRatingElement}
+                        placeholderSymbol={placeholderRatingElement}
+                        fullSymbol={ratingElement}
+                      />
+                    </div>
+                    {this.state.detailsView.description !== undefined ? (
+                      <textarea
+                        ref={r => (this.textarea = r)}
+                        placeholder="Add a review"
+                        rows={5}
+                        onKeyDown={e => {
+                          if (e.keyCode === ENTER) {
+                            e.preventDefault()
+                            this._handleSubmitDescription(this.textarea.value)
+                            this.textarea.blur()
+                          }
+                        }}
+                        onBlur={e => this._handleSubmitDescription(e.target.value)}
+                        defaultValue={
+                          this.state.detailsView.description &&
+                          this.state.detailsView.description.length
+                            ? this.state.detailsView.description
+                            : undefined
+                        }
+                        style={styles.description}
+                      />
+                    ) : (
+                      <div style={{backgroundColor: 'white', height: TEXTAREA_HEIGHT}} />
+                    )}
+                  </div>
+                  <div style={styles.bottomPane} />
                 </div>
-                <div style={styles.bottomPane} />
-              </div>
-            ) : (
-              <div />
-            )}
-          </SwipeableBottomSheet>
-        </div>
+              ) : (
+                <div />
+              )}
+            </SwipeableBottomSheet>
+          </div>
+        </MuiThemeProvider>
       )
     }
   }
