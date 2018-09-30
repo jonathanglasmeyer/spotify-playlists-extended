@@ -8,6 +8,7 @@ const Palette = {
   gray3: 'hsl(235, 8%, 55%)', // placeholder
   gray4: 'hsl(230, 10%, 65%)', // hint text
   gray5: 'hsl(240, 17%, 96%)', // backgrounds, borders
+  gray6: 'hsl(240, 10%, 98%)', // backgrounds, borders
 }
 
 const Colors = {
@@ -15,10 +16,11 @@ const Colors = {
 	textSecondary: Palette.gray2,
 	textTertiary: Palette.gray4,
 	background: Palette.gray5,
+	background2: Palette.gray6,
 }
 
 const FontSizes = {
-	h1: 18,
+	h1: 20,
 	body: 16,
 	small: 14,
 	hint: 12,
@@ -71,7 +73,7 @@ export const styles = {
 		marginRight: 56,
     marginBottom: 8,
     color: Colors.textPrimary,
-		// fontWeight: 600,
+		fontWeight: 600,
     fontSize: FontSizes.h1,
   },
   description: {

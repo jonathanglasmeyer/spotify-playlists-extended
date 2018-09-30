@@ -61,7 +61,6 @@ class Api {
 	}
 
   updatePlaylistDescription = (id, description) => {
-		console.info('[Api.js] description: ', description);
     return this.fetch(
 			`users/${this.userId}/playlists/${id}`,
 			JSON.stringify({description: description || '-'}),

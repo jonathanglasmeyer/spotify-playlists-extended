@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import {MuiThemeProvider, createMuiTheme} from '@material-ui/core/styles'
 import Checkbox from '@material-ui/core/Checkbox'
 import Switch from '@material-ui/core/Switch'
 import classnames from 'classnames'
@@ -22,6 +22,7 @@ const REDIRECT_URI =
     : 'http://localhost:3000'
 
 const MOCK = false
+const EDITING_OPACITY = 0.15
 
 const ENTER = 13
 const ESC = 27
@@ -85,7 +86,7 @@ const RATING_REGEX = /^\((1|1\.5|2|2\.5|3|3\.5|4|4\.5|5|5\.5)\)/
 const GENRE_REGEX = /(\.[a-z?]+)/
 
 const materialUITheme = createMuiTheme({
-palette: {
+  palette: {
     secondary: {main: '#222'},
   },
   typography: {
@@ -165,6 +166,7 @@ class App extends Component {
     allPlaylistsFetched: boolean,
     importingAlbums: boolean,
     activeGenre: ?string,
+    editingDescription: false,
   } = {
     filter: '',
     activeGenre: null,
@@ -174,6 +176,10 @@ class App extends Component {
   }
 
   componentDidMount() {
+    window.onpopstate = e => {
+      this.setState({detailsView: null, open: false})
+    }
+
     !MOCK && performAuthorizeRedirect.bind(this)()
     document.addEventListener(
       'keydown',
@@ -300,14 +306,19 @@ class App extends Component {
                   )}
               </div>
             </div>
-            <div style={{marginTop: 20, marginBottom: 5}}>
+            <div
+              style={{
+                marginTop: 20,
+                marginBottom: 5,
+                display: this.state.open ? 'none' : undefined,
+              }}>
               {playlistsSearchResult && (
                 <div style={{display: 'flex', justifyContent: 'space-between'}}>
                   <span style={listStyles.resultsHint}>{`${
                     !this.state.filter ? playlists.length : playlistsSearchResult.length
                   } result(s)`}</span>
                   <FormControlLabel
-								style={{marginTop: -20, marginRight: 2}}
+                    style={{marginTop: -20, marginRight: 2}}
                     control={
                       <Switch
                         value={this.state.checkedA}
@@ -324,9 +335,17 @@ class App extends Component {
                 return (
                   <div
                     onClick={() => {
+                      window.history.pushState(null, null, '#details') // push state that hash into the url
                       this.setState({detailsView: extendedPlaylist, open: true}, async () => {
+                        const cacheKey = `playlist-${extendedPlaylist.id}`
+                        const cachedPlaylist = JSON.parse(
+                          window.localStorage.getItem(cacheKey) || 'null'
+                        )
+                        this.setState({detailsView: cachedPlaylist})
                         const playlistFull = await this.api.getPlaylistFull(extendedPlaylist.id)
-                        this.setState({detailsView: makeExtendedPlaylistObject(playlistFull)})
+                        const extendedPlaylistFull = makeExtendedPlaylistObject(playlistFull)
+                        window.localStorage.setItem(cacheKey, JSON.stringify(extendedPlaylistFull))
+                        this.setState({detailsView: extendedPlaylistFull})
                       })
                     }}
                     key={extendedPlaylist.id}
@@ -335,8 +354,8 @@ class App extends Component {
                       display: 'flex',
                       userSelect: 'none',
                       alignItems: 'flex-start',
-                      marginLeft: isMobile ? 0 : -10,
-                      paddingLeft: isMobile ? 0 : 10,
+                      marginLeft: isMobile ? -20 : -10,
+                      paddingLeft: isMobile ? 20 : 10,
                       paddingTop: 10,
                       paddingBottom: 10,
                     }}>
@@ -364,7 +383,7 @@ class App extends Component {
               }}
               onChange={open => this.setState({open})}
               topShadow={isMobile}
-              swipeableViewsProps={!isMobile ? {animateTransitions: false} : {}}
+              swipeableViewsProps={{animateTransitions: false}}
               onTransitionEnd={() => this.setState({detailsView: null})}
               marginTop={isMobile ? 0 : 40}
               fullScreen
@@ -404,11 +423,16 @@ class App extends Component {
                   />
                   <div className="top-nav-wrapper">
                     <div
+                      style={{opacity: this.state.editingDescription && isMobile ? EDITING_OPACITY : 1}}
                       onClick={() => this.setState({open: false})}
                       className="top-nav-bar-button chevron-up-icon">
                       {chevronDownIcon}
                     </div>
-                    <div style={{display: 'flex'}}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        opacity: this.state.editingDescription && isMobile ? EDITING_OPACITY : 1,
+                      }}>
                       <div
                         onClick={this._handleDeletePlaylist}
                         className="top-nav-bar-button delete-icon">
@@ -436,45 +460,53 @@ class App extends Component {
                       </Dropdown>
                     </div>
                   </div>
-                  <div style={{position: 'relative', margin: 0}}>
-                    <img
-                      alt="album-art"
-                      style={{
-                        boxShadow: '1px 1px 20px hsl(192, 22%, 95%)',
-                        borderRadius: BORDER_RADIUS,
-                        width: '100%',
-                        height: isMobile ? window.innerWidth : undefined,
-                        backgroundColor: 'hsl(192, 22%, 95%)',
-                      }}
-                      src={
-                        this.state.detailsView.images && this.state.detailsView.images.length
-                          ? this.state.detailsView.images[0].url
-                          : undefined
-                      }
-                    />
-
-                    <div style={styles.fabWrapper}>
-                      <a
-                        className="fab"
-                        href={
-                          window.innerWidth < 400
-                            ? this.state.detailsView.external_urls.spotify
-                            : this.state.detailsView.uri
-                        }>
-                        <svg height="18" viewBox="0 0 22 28" width="14" fill="white">
-                          <path
-                            d="m440.415 583.554-18.997-12.243c-1.127-.607-2.418-.544-2.418 1.635v24.108c0 1.992 1.385 2.306 2.418 1.635l18.997-12.243c.782-.799.782-2.093 0-2.892"
-                            fillRule="evenodd"
-                            transform="translate(-419 -571)"
-                          />
-                        </svg>
-                      </a>
-                    </div>
+                  <div
+                    className="album-art-full-wrapper"
+                    style={{
+                      ...(this.state.editingDescription && isMobile
+                        ? {height: 40, margin: 10, opacity: 0}
+                        : {height: 180}),
+                      ...(!isMobile ? {marginTop: 65, paddingTop: 80, marginBottom: 130} : {}),
+                    }}>
+                    <a
+                      href={
+                        window.innerWidth < 400
+                          ? _.get(this.state.detailsView, 'external_urls.spotify')
+                          : _.get(this.state.detailsView, 'uri')
+                      }>
+                      <img
+                        alt="album-art"
+                        key={_.get(this.state.detailsView, 'id')}
+                        className="album-art-full"
+                        src={
+                          this.state.detailsView.images && this.state.detailsView.images.length
+                            ? this.state.detailsView.images[0].url
+                            : undefined
+                        }
+                      />
+                    </a>
                   </div>
-                  <div style={{margin: 16, marginTop: 16, overflowY: 'auto', overflowX: 'hidden'}}>
-                    <div style={styles.title}>{this.state.detailsView.name}</div>
+                  <div
+                    style={{
+                      margin: 16,
+                      marginTop: 16,
+                      overflowY: 'auto',
+                      overflowX: 'hidden',
+                    }}>
                     <div
-                      style={{marginBottom: 8, opacity: this.state.detailsView.rating ? 1 : 0.4}}>
+                      style={{
+                        ...styles.title,
+                        opacity: this.state.editingDescription && isMobile ? EDITING_OPACITY : 1,
+                      }}>
+                      {this.state.detailsView.name}
+                    </div>
+                    <div
+                      style={{
+                        marginBottom: 8,
+                        marginTop: 8,
+                        opacity: this.state.detailsView.rating ? 1 : 0.4,
+                        opacity: this.state.editingDescription && isMobile ? EDITING_OPACITY : 1,
+                      }}>
                       <Rating
                         onChange={this._handleUpdateRating}
                         initialRating={this.state.detailsView.rating}
@@ -488,6 +520,7 @@ class App extends Component {
                         ref={r => (this.textarea = r)}
                         placeholder="Add a review"
                         rows={5}
+                        onFocus={() => this.setState({editingDescription: true})}
                         onKeyDown={e => {
                           if (e.keyCode === ENTER) {
                             e.preventDefault()
@@ -495,14 +528,20 @@ class App extends Component {
                             this.textarea.blur()
                           }
                         }}
-                        onBlur={e => this._handleSubmitDescription(e.target.value)}
+                        onBlur={e => {
+                          this._handleSubmitDescription(e.target.value)
+                          this.setState({editingDescription: false})
+                        }}
                         defaultValue={
                           this.state.detailsView.description &&
                           this.state.detailsView.description.length
                             ? this.state.detailsView.description
                             : undefined
                         }
-                        style={styles.description}
+                        style={{
+                          ...styles.description,
+                          color: this.state.editingDescription ? '#000' : undefined,
+                        }}
                       />
                     ) : (
                       <div style={{backgroundColor: 'white', height: TEXTAREA_HEIGHT}} />

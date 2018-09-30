@@ -1,3 +1,16 @@
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+* {
+		-webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
 :root {
 	--gray1: hsl(233, 13%, 16%);
 	--gray1b: hsl(233, 13%, 22%);
@@ -58,6 +71,10 @@ button:disabled {
 
 .item {
     animation: fade-in 0.4s linear;
+		margin-left: -20px;
+		padding-left: -20px;
+		padding-right: -20px;
+		margin-right: -20px;
 		cursor: pointer;
 		background: white;
 		transition: all .2s;
@@ -138,7 +155,7 @@ input:focus {
 .fab svg {
 	display: inline-block;
 	position: relative;
-	left: 2px;
+	left: 1px;
 }
 
 
@@ -184,6 +201,7 @@ textarea:focus {
 	/* border: 1px solid var(--gray5); */
 }
 textarea {
+	animation: fade-in .4s;
 	/* background: var(--gray6b); */
 	/* padding: 5px; */
 	border: none;
@@ -203,10 +221,10 @@ textarea {
 	left: 0;
 	right: 0;
 	height: 65px;
-	padding-left: 8px;
-	padding-right: 8px;
-	padding-top: 10px;
-	background: linear-gradient(rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0) 90%);
+	padding-left: 16px;
+	padding-right: 16px;
+	padding-top: 16px;
+	/* background: linear-gradient(rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0) 90%); */
 	/* opacity: .8; */
 	display: flex;
 	justify-content: space-between;
@@ -223,7 +241,7 @@ textarea {
 		width: 32px;
 		outline: none;
 		height: 32px;
-		color: white;
+		color: black;
 		/* background: 'rgba(0, 0, 0, 0.0)', */
 		/* borderRadius: '50%', */
 		/* border: 'none', */
@@ -240,14 +258,14 @@ textarea {
 }
 
 .chevron-up-icon {
+	color: black;
 		transform: rotate(180deg);
 }
 
 .delete-icon {
-
 	opacity: .9;
 	width: 21px;
-	margin-right: 8px;
+	margin-right: 16px;
 	position: relative;
 	top: -1px;
 }
@@ -354,4 +372,24 @@ input[type="checkbox"] {
 
 .input-cross-icon:hover svg {
 	opacity: .5;
+}
+
+.album-art-full-wrapper {
+	position: relative;
+	/* margin: 40px; */
+	margin-top: 75px;
+	margin-bottom: 35px;
+	/* margin-left: 20px; */
+	display: flex;
+	justify-content: center;
+	opacity: 1;
+	transition: opacity .2s ease-out;
+}
+
+.album-art-full {
+	box-shadow: 1px 5px 40px -3px hsl(0, 10%, 75%);
+	border-radius: 5px;
+	width: 180px;
+	height: 180px;
+	/* height: isMobile ? window.innerWidth : undefined, */
 }
