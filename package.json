@@ -5,6 +5,7 @@
   "dependencies": {
     "@material-ui/core": "^1.2.1",
     "classnames": "^2.2.5",
+    "eslint_d": "^7.1.1",
     "invariant": "^2.2.4",
     "lodash": "^4.17.10",
     "react": "^16.3.2",

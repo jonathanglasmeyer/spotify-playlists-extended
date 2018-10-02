@@ -11,7 +11,7 @@ const Palette = {
   gray6: 'hsl(240, 10%, 98%)', // backgrounds, borders
 }
 
-const Colors = {
+export const Colors = {
 	textPrimary: Palette.gray1,
 	textSecondary: Palette.gray2,
 	textTertiary: Palette.gray4,
