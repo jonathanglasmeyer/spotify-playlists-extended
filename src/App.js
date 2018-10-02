@@ -8,13 +8,18 @@ import classnames from 'classnames'
 import Rating from 'react-rating'
 import SwipeableBottomSheet from 'react-swipeable-bottom-sheet'
 import _ from 'lodash'
+import _sumBy from 'lodash/sumBy'
+import _uniqBy from 'lodash/uniqBy'
 import performAuthorizeRedirect from './performAuthorizeRedirect'
 import './App.css'
 import Api, {DONT_FETCH_ALL_ALBUMS, DONT_FETCH_ALL_PLAYLISTS} from './Api'
 import {REVIEW, MOCK_DETAIL} from './mock'
 import {folderIcon, chevronDownIcon, deleteIcon, crossIcon} from './icons'
 import {listStyles, styles, BORDER_RADIUS, TEXTAREA_HEIGHT, isMobile} from './styles'
+import UnimportedAlbumsModal from './UnimportedAlbumsModal'
 import Dropdown, {DropdownTrigger, DropdownContent} from 'react-simple-dropdown'
+import {SimpleRating} from './components'
+
 const SPOTIFY_PLAYLISTS_EXTENDED_CLIENT_ID = process.env.REACT_APP_SPOTIFY_CLIENT_ID
 const REDIRECT_URI =
   process.env.NODE_ENV === 'production'
@@ -27,6 +32,10 @@ const EDITING_OPACITY = 0.15
 const ENTER = 13
 const ESC = 27
 
+const playlistCacheKey = id => `playlist-${id}`
+
+const getAvgRating = pls =>
+  (_sumBy(pls, 'rating') || 0) / pls.filter(p => p.rating !== undefined).length
 const sanitize = s => s.replace(/[?]/g, '')
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -43,29 +52,10 @@ const addPlaylistsForAlbums = async (albums, api, then) => {
   then()
 }
 
-const getDuplicates = async (playlists, api) => {
-  let remove = []
-  let deletedNames = {}
-  for (const playlist of playlists) {
-    const playlistsWithThisName = playlists.filter(p => p.name === playlist.name)
-    if (playlistsWithThisName.length > 1) {
-      const playlistsToRemove = playlistsWithThisName.filter(
-        p => p.id !== playlist.id && !p.name.match(/\(\d\)/)
-      )
-      if (!(playlist.name in deletedNames)) {
-        playlistsToRemove.forEach(p => {
-          deletedNames[p.name] = true
-          remove = [...remove, ...playlistsToRemove]
-        })
-      }
-    }
-  }
-  return remove
-}
-
 const NO_GENRE = '.?'
 const GENRES = {
   '.sw': 'Songwriter',
+  '.su': 'Summer',
   '.hh': 'Hiphop',
   '.so': 'Soul',
   '.jo': 'Jazz old',
@@ -108,23 +98,6 @@ const ratingElement = <span style={ratingStyle}>★ </span>
 const placeholderRatingElement = <span style={{...ratingStyle, opacity: 0.4}}>x </span>
 const emptyRatingElement = <span style={ratingStyle}>☆</span>
 
-const SimpleRating = ({rating}) => {
-  return (
-    <div style={listStyles.rating}>
-      {_.times(rating).map(i => (
-        <span key={i} style={{color: 'rgba(254, 201, 7, 1)'}}>
-          ★
-        </span>
-      ))}
-      {_.times(5 - rating).map(i => (
-        <span key={i} style={{color: 'rgba(254, 201, 7, .8)'}}>
-          ☆
-        </span>
-      ))}
-    </div>
-  )
-}
-
 const getRelevantPlaylists = playlists =>
   playlists.filter(playlist => {
     return !playlist.name.includes('*') && playlist.name.includes(' – ')
@@ -166,18 +139,20 @@ class App extends Component {
     allPlaylistsFetched: boolean,
     importingAlbums: boolean,
     activeGenre: ?string,
+    activeArtist: ?string,
     editingDescription: false,
   } = {
     filter: '',
     activeGenre: null,
     detailsView: MOCK ? MOCK_DETAIL : null,
     open: MOCK,
+    activeArtist: null,
     allPlaylistsFetched: false,
   }
 
   componentDidMount() {
     window.onpopstate = e => {
-      this.setState({detailsView: null, open: false})
+      this.setState({detailsView: null, open: false, editingDescription: false})
     }
 
     !MOCK && performAuthorizeRedirect.bind(this)()
@@ -185,7 +160,7 @@ class App extends Component {
       'keydown',
       e => {
         if (e.keyCode === ESC && this.state.open) {
-          this.setState({open: false})
+          this.setState({open: false, editingDescription: false})
         }
       },
       false
@@ -250,21 +225,11 @@ class App extends Component {
             <div>
               {this.state.albumsWithNoMatchingPlaylist &&
                 this.state.albumsWithNoMatchingPlaylist.length && (
-                  <div className="bottom-overlay">
-                    <h4>Unimported albums</h4>
-                    <div>
-                      {this.state.albumsWithNoMatchingPlaylist.map(album => (
-                        <div key={album.id}>{album.playlistName}</div>
-                      ))}
-                    </div>
-                    <div style={{marginTop: 20}}>
-                      <button
-                        disabled={this.state.importingAlbums}
-                        onClick={this._importPlaylistsFromAlbums}>
-                        Import
-                      </button>
-                    </div>
-                  </div>
+                  <UnimportedAlbumsModal
+                    albums={this.state.albumsWithNoMatchingPlaylist}
+                    isImporting={this.state.importingAlbums}
+                    onClickImport={this._importPlaylistsFromAlbums}
+                  />
                 )}
               <div style={listStyles.genrePills}>
                 {Object.keys(GENRES).map(genre => {
@@ -310,7 +275,6 @@ class App extends Component {
               style={{
                 marginTop: 20,
                 marginBottom: 5,
-                display: this.state.open ? 'none' : undefined,
               }}>
               {playlistsSearchResult && (
                 <div style={{display: 'flex', justifyContent: 'space-between'}}>
@@ -318,7 +282,7 @@ class App extends Component {
                     !this.state.filter ? playlists.length : playlistsSearchResult.length
                   } result(s)`}</span>
                   <FormControlLabel
-                    style={{marginTop: -20, marginRight: 2}}
+                    style={{marginTop: -20, marginRight: 2, zIndex: 0}}
                     control={
                       <Switch
                         value={this.state.checkedA}
@@ -331,45 +295,88 @@ class App extends Component {
               )}
             </div>
             {playlistsSearchResult &&
-              playlistsSearchResult.map(extendedPlaylist => {
+              _.sortBy(
+                _.entries(_.groupBy(playlistsSearchResult, p => p.name.split(' – ')[0])),
+                ([name, playlists]) => {
+                  const pls = playlists
+                  const factor = getAvgRating(pls) + pls.length / 3
+                  return 1 / factor
+                }
+              ).map(([name, playlists]) => {
+                const pls = _uniqBy(playlists, 'id')
+                const avgRating = getAvgRating(pls)
                 return (
-                  <div
-                    onClick={() => {
-                      window.history.pushState(null, null, '#details') // push state that hash into the url
-                      this.setState({detailsView: extendedPlaylist, open: true}, async () => {
-                        const cacheKey = `playlist-${extendedPlaylist.id}`
-                        const cachedPlaylist = JSON.parse(
-                          window.localStorage.getItem(cacheKey) || 'null'
+                  <div>
+                    <h4
+                      style={{cursor: 'pointer', fontWeight: 400}}
+                      onClick={() =>
+                        this.setState({
+                          activeArtist: this.state.activeArtist === name ? null : name,
+                        })
+                      }>
+                      {`${name} (${pls.length} album${pls.length > 1 ? 's' : ''})`}
+                      {_.some(pls, p => p.rating !== undefined) && (
+                        <SimpleRating rating={Math.round(avgRating)} />
+                      )}
+                    </h4>
+                    {this.state.activeArtist === name &&
+                      pls.map(extendedPlaylist => {
+                        return (
+                          <div
+                            onClick={() => {
+                              window.history.pushState(null, null, '#details') // push state that hash into the url
+                              this.setState(
+                                {detailsView: extendedPlaylist, open: true},
+                                async () => {
+                                  const cacheKey = playlistCacheKey(extendedPlaylist.id)
+                                  const cachedPlaylist = JSON.parse(
+                                    window.localStorage.getItem(cacheKey) || 'null'
+                                  )
+                                  if (cachedPlaylist) {
+                                    this.setState({detailsView: cachedPlaylist})
+                                    console.info('[App.js] cachedPlaylist: ', cachedPlaylist);
+                                  }
+                                  const playlistFull = await this.api.getPlaylistFull(
+                                    extendedPlaylist.id
+                                  )
+                                  const extendedPlaylistFull = makeExtendedPlaylistObject(
+                                    playlistFull
+                                  )
+                                  window.localStorage.setItem(
+                                    cacheKey,
+                                    JSON.stringify(extendedPlaylistFull)
+                                  )
+                                  this.setState({detailsView: extendedPlaylistFull})
+                                }
+                              )
+                            }}
+                            key={extendedPlaylist.id}
+                            className={'item'}
+                            style={{
+                              display: 'flex',
+                              userSelect: 'none',
+                              alignItems: 'flex-start',
+                              marginLeft: isMobile ? -20 : -10,
+                              paddingLeft: isMobile ? 20 : 10,
+                              paddingTop: 10,
+                              paddingBottom: 10,
+                            }}>
+                            <img
+                              alt="album-art"
+                              style={listStyles.image}
+                              src={_.get(extendedPlaylist, 'images[0].url')}
+                            />
+                            <div style={listStyles.itemMainWrapper}>
+                              <span className="item-title" style={listStyles.itemTitle}>
+                                {extendedPlaylist.name}
+                              </span>
+                              {extendedPlaylist.rating && (
+                                <SimpleRating rating={extendedPlaylist.rating} />
+                              )}
+                            </div>
+                          </div>
                         )
-                        this.setState({detailsView: cachedPlaylist})
-                        const playlistFull = await this.api.getPlaylistFull(extendedPlaylist.id)
-                        const extendedPlaylistFull = makeExtendedPlaylistObject(playlistFull)
-                        window.localStorage.setItem(cacheKey, JSON.stringify(extendedPlaylistFull))
-                        this.setState({detailsView: extendedPlaylistFull})
-                      })
-                    }}
-                    key={extendedPlaylist.id}
-                    className={'item'}
-                    style={{
-                      display: 'flex',
-                      userSelect: 'none',
-                      alignItems: 'flex-start',
-                      marginLeft: isMobile ? -20 : -10,
-                      paddingLeft: isMobile ? 20 : 10,
-                      paddingTop: 10,
-                      paddingBottom: 10,
-                    }}>
-                    <img
-                      alt="album-art"
-                      style={listStyles.image}
-                      src={_.get(extendedPlaylist, 'images[0].url')}
-                    />
-                    <div style={listStyles.itemMainWrapper}>
-                      <span className="item-title" style={listStyles.itemTitle}>
-                        {extendedPlaylist.name}
-                      </span>
-                      {extendedPlaylist.rating && <SimpleRating rating={extendedPlaylist.rating} />}
-                    </div>
+                      })}
                   </div>
                 )
               })}
@@ -400,7 +407,7 @@ class App extends Component {
                     backgroundColor: 'white',
                   }}>
                   <div
-                    onClick={() => this.setState({open: false})}
+                    onClick={() => this.setState({open: false, editingDescription: false})}
                     onWheel={e => e.preventDefault()}
                     style={{
                       position: 'fixed',
@@ -411,7 +418,7 @@ class App extends Component {
                     }}
                   />
                   <div
-                    onClick={() => this.setState({open: false})}
+                    onClick={() => this.setState({open: false, editingDescription: false})}
                     onWheel={e => e.preventDefault()}
                     style={{
                       position: 'fixed',
@@ -423,8 +430,10 @@ class App extends Component {
                   />
                   <div className="top-nav-wrapper">
                     <div
-                      style={{opacity: this.state.editingDescription && isMobile ? EDITING_OPACITY : 1}}
-                      onClick={() => this.setState({open: false})}
+                      style={{
+                        opacity: this.state.editingDescription && isMobile ? EDITING_OPACITY : 1,
+                      }}
+                      onClick={() => this.setState({open: false, editingDescription: false})}
                       className="top-nav-bar-button chevron-up-icon">
                       {chevronDownIcon}
                     </div>
@@ -469,10 +478,13 @@ class App extends Component {
                       ...(!isMobile ? {marginTop: 65, paddingTop: 80, marginBottom: 130} : {}),
                     }}>
                     <a
+                      style={this.state.editingDescription ? {pointerEvents: 'none'} : undefined}
                       href={
-                        window.innerWidth < 400
-                          ? _.get(this.state.detailsView, 'external_urls.spotify')
-                          : _.get(this.state.detailsView, 'uri')
+                        this.state.editingDescription
+                          ? undefined
+                          : window.innerWidth < 400
+                            ? _.get(this.state.detailsView, 'external_urls.spotify')
+                            : _.get(this.state.detailsView, 'uri')
                       }>
                       <img
                         alt="album-art"
@@ -522,13 +534,14 @@ class App extends Component {
                         rows={5}
                         onFocus={() => this.setState({editingDescription: true})}
                         onKeyDown={e => {
-                          if (e.keyCode === ENTER) {
+                          if (e.keyCode === ENTER || e.keyCode === ESC) {
                             e.preventDefault()
                             this._handleSubmitDescription(this.textarea.value)
                             this.textarea.blur()
                           }
                         }}
                         onBlur={e => {
+                          console.info('[App.js] ', 'ONBLUR');
                           this._handleSubmitDescription(e.target.value)
                           this.setState({editingDescription: false})
                         }}
@@ -562,6 +575,11 @@ class App extends Component {
 
   _handleSubmitDescription = value => {
     this.api.updatePlaylistDescription(this.state.detailsView.id, value)
+    const newItem = {...this.state.detailsView, description: value}
+    window.localStorage.setItem(
+      playlistCacheKey(this.state.detailsView.id),
+      JSON.stringify(newItem)
+    )
   }
 
   _handleChangeGenre = genre => {
@@ -607,6 +625,7 @@ class App extends Component {
       }
       this.setState(({playlists}) => ({
         playlists: playlists.filter(p => p.id !== extendedPlaylist.id),
+        editingDescription: false,
         open: false,
       }))
     }
