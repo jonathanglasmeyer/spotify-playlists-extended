@@ -1,10 +1,13 @@
 // ${userId}/playlists/${playlistId}/tracks
 import invariant from 'invariant'
 const urlJoin = require('url-join')
+const throttle = require('throttle-promise');
 
 const PLAYLIST_LIMIT = process.env.NODE_ENV === 'production' ? 50 : 30
 export const DONT_FETCH_ALL_PLAYLISTS = false && process.env.NODE_ENV !== 'production'
  export const DONT_FETCH_ALL_ALBUMS = false && process.env.NODE_ENV !== 'production'
+
+const rateLimitedFetch = throttle(fetch, 5, 1000);
 
 const postprocessAlbum = (o) => {
   const album = o.album || o
@@ -36,7 +39,7 @@ class Api {
           Authorization: 'Bearer ' + this.accessToken,
         }),
       })
-      const res = await fetch(request)
+      const res = await rateLimitedFetch(request)
 			if (method === 'GET') {
 				return await res.json()
 			} else {
@@ -53,6 +56,12 @@ class Api {
     this.userId = me.id
     return me
   }
+
+  getArtist = (artistName) => {
+    return this.fetch(
+			`search?q=${artistName.replace(/ /g, '%20')}&type=artist`
+    )
+	}
 
   getPlaylistFull = (id) => {
     return this.fetch(

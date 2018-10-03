@@ -18,3 +18,7 @@ export const SimpleRating = ({rating}) => {
     </div>
   )
 }
+export const Star = () =>
+        <span style={{color: 'rgba(254, 201, 7, 1)'}}>
+          ★
+        </span>

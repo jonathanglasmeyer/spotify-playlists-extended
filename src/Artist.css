@@ -1,0 +1,116 @@
+.Artist {
+	display: flex;
+	cursor: pointer;
+	margin-left: -20px;
+	margin-right: -20px;
+	padding: 10px 20px;
+	opacity: 1;
+	transition: all .2s ease-in-out;
+}
+
+.Artist:hover {
+	opacity: .9;
+}
+.Artist:hover .Artist__image {
+	transform: scale(1.01);
+}
+
+.Artist__image {
+	transform: scale(1);
+	opacity: 1;
+	transition: all .2s ease-in-out;
+	margin-right: 20px;
+	height: 60px;
+	width: 60px;
+	background-repeat: no-repeat;
+	border-radius: 50%;
+	background-size: cover;
+}
+
+.Artist__text {
+	flex-direction: column;
+	display: flex;
+	justify-content: center;
+}
+
+.Artist__secondRow {
+	color: var(--textSecondary);
+	margin-top: 2px;
+	font-size: var(--fontSizeSmall);
+	/* margin-right: 20px; */
+}
+
+.Artist__albums {
+	margin: 0 -20px;
+	padding: 20px;
+	border-top: 1px solid var(--borderColor);
+	border-bottom: 1px solid var(--gray6);
+	/* background: var(--gray6b); */
+}
+
+.Artist__album {
+    animation: fade-in 0.4s linear;
+		margin-left: -20px;
+		padding-left: -20px;
+		padding-right: -20px;
+		margin-right: -20px;
+		cursor: pointer;
+		/* background: white; */
+		transition: all .2s;
+		border-radius: 5px;
+		/* border: 1px solid white; */
+}
+
+.Artist__album img {
+	opacity: 1;
+	 transition: all .3s ease-in-out;
+}
+.Artist__album .Artist__album-title {
+	user-select: none;
+	opacity: .9;
+	 transition: all .3s ease-in-out;
+}
+@media screen and (min-width: 600px) {
+	.Artist__album:hover .Artist__album-title {
+		color: #000 !important;
+		opacity: 1;
+	}
+	.Artist__album:hover img {
+		transform: scale(1.01);
+		opacity: 0.9;
+
+		/* font-weight: 700; */
+	}
+}
+
+.Artist__album__image {
+	width: 80px;
+	border-radius: 2px;
+	backgroundColor: var(--backgroundColor);
+}
+
+@media screen and (min-width: 600px) {
+	.Artist__album__image {
+		width: 100px;
+	}
+}
+
+.Artist__recentlyChangedBlob {
+	position: absolute;
+	bottom: 3px;
+	border: 2px solid white;
+	right: 21px;
+	background: #333;
+	border-radius: 50%;
+	width: 13px;
+	height: 13px;
+}
+.album-icon {
+	width: 8px;
+	height: 8px;
+	background-color: white;
+	border-radius: 50%;
+	display: inline-block;
+	border: 2px solid #444;
+	margin-right: 2px;
+}

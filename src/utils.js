@@ -15,6 +15,7 @@ export const getAvgAge = pls =>
 export const sanitize = s => s.replace(/[?]/g, '')
 
 export const playlistCacheKey = id => `playlist-${id}`
+export const artistImageUrlCacheKey = id => `artist-image-url-${id}`
 
 const RATING_REGEX = /^\((1|1\.5|2|2\.5|3|3\.5|4|4\.5|5|5\.5)\)/
 const GENRE_REGEX = /(\.[a-z?]+)/

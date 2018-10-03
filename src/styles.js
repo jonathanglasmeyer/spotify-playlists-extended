@@ -48,7 +48,6 @@ export const listStyles = {
 		color: Colors.textSecondary,
 		marginTop: 2,
   },
-	image: {width: isMobile ? 80 : 100, backgroundColor: Colors.background},
 	itemMainWrapper: {
     marginLeft: 16,
 	},

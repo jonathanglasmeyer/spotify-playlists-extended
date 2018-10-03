@@ -1,6 +1,6 @@
 {
-  "name": "spotify-playlists-extended",
-  "alias": "spotify-playlists-extended",
+  "name": "spotify-extended",
+  "alias": "spotify-extended",
 	"env": {
 		"NODE_ENV": "production"
 	}

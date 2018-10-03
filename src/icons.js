@@ -57,3 +57,7 @@ export const crossIcon = (
     <line x1="9" y1="9" x2="15" y2="15" />
   </svg>
 )
+
+export const albumIcon = (
+<svg style={{marginRight: 2}} height="10" viewBox="0 0 20 20" width="10" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" transform="translate(-2 -2)"><path d="m0 0h24v24h-24z"/><path d="m12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10-4.48-10-10-10zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5s2.01-4.5 4.5-4.5 4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z" fill="#000" fill-rule="nonzero"/></g></svg>
+)

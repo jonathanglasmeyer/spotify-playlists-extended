@@ -28,7 +28,16 @@ class DetailView extends React.Component {
   }
 
   render() {
-    const {open, onChangeOpen, onChangeGenre, onDeletePlaylist, onUnsetDetailsView, onSubmitDescription, onUpdateRating, detailsView} = this.props
+    const {
+      open,
+      onChangeOpen,
+      onChangeGenre,
+      onDeletePlaylist,
+      onUnsetDetailsView,
+      onSubmitDescription,
+      onUpdateRating,
+      detailsView,
+    } = this.props
     const opacityDuringDescrEditing =
       this.state.editingDescription && isMobile ? EDITING_OPACITY : 1
     const onClose = () => {
@@ -96,9 +105,7 @@ class DetailView extends React.Component {
                   display: 'flex',
                   opacity: opacityDuringDescrEditing,
                 }}>
-                <div
-                  onClick={onDeletePlaylist}
-                  className="top-nav-bar-button delete-icon">
+                <div onClick={onDeletePlaylist} className="top-nav-bar-button delete-icon">
                   {deleteIcon}
                 </div>
                 <Dropdown ref={dropdown => (this.dropdown = dropdown)}>
@@ -109,7 +116,10 @@ class DetailView extends React.Component {
                     {Object.keys(GENRES).map(genre => {
                       return (
                         <div
-                          onClick={onChangeGenre(genre)}
+                          onClick={() => {
+                            this.dropdown.hide()
+                            onChangeGenre(genre)
+                          }}
                           key={genre}
                           className="dropdown-list-item"
                           style={{

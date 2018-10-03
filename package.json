@@ -2,6 +2,7 @@
   "name": "spotify-playlists-extended",
   "version": "0.1.0",
   "private": true,
+	"homepage": "http://jonathanglasmeyer.github.io/spotify-playlists-extended",
   "dependencies": {
     "@material-ui/core": "^1.2.1",
     "classnames": "^2.2.5",
@@ -17,12 +18,16 @@
     "react-scripts": "1.1.4",
     "react-simple-dropdown": "^3.2.0",
     "react-swipeable-bottom-sheet": "^1.1.1",
+    "throttle-promise": "^1.0.4",
     "url-join": "^4.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "deploy": "rm -rf build && npm run build && cd build && now --public --local-config=../now.json && now alias --local-config=../now.json"
+    "deploy": "rm -rf build && npm run build && gh-pages -d build"
+  },
+  "devDependencies": {
+    "gh-pages": "^2.0.0"
   }
 }

@@ -143,6 +143,7 @@ class App extends Component {
       return (
         <MuiThemeProvider theme={materialUITheme}>
           <div className="App">
+						<div style={{position: 'fixed', top: 0, right: 0, fontSize: 10}}>v1</div>
             <div>
               {this.state.albumsWithNoMatchingPlaylist &&
                 this.state.albumsWithNoMatchingPlaylist.length && (
@@ -182,6 +183,8 @@ class App extends Component {
               ).map(([name, playlists]) => {
                 return (
                   <Artist
+										key={name}
+										api={this.api}
                     name={name}
                     playlists={playlists}
                     onOpenDetailsView={playlist => {
@@ -217,7 +220,7 @@ class App extends Component {
               onUnsetDetailsView={() => this.setState({detailsView: null})}
               onUpdateRating={this._handleUpdateRating}
               onDeletePlaylist={this._handleDeletePlaylist}
-              onChangeGenre={genre => () => this._handleChangeGenre(genre)}
+              onChangeGenre={this._handleChangeGenre}
             />
           </div>
         </MuiThemeProvider>
@@ -236,7 +239,6 @@ class App extends Component {
   }
 
   _handleChangeGenre = genre => {
-    this.dropdown.hide()
     const {detailsView: extendedPlaylist} = this.state
     const genreFormatted = genre === NO_GENRE ? '' : genre
     const ratingFormatted = extendedPlaylist.rating ? `(${extendedPlaylist.rating})` : ''
