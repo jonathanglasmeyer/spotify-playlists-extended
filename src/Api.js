@@ -109,17 +109,19 @@ class Api {
     )
 	}
 
-  getPlaylists = async (offset = 0, all = true) => {
+  getPlaylists = async (offset = 0, updateUi) => {
     invariant(this.userId, 'userId missing')
-		const limit = !all ? 20 : PLAYLIST_LIMIT // for fetching only some playlists to show sth
+		const limit = PLAYLIST_LIMIT // for fetching only some playlists to show sth
     const playlistsPagingObject = await this.fetch(
       `users/${this.userId}/playlists?limit=${limit}&offset=${offset}`
     )
 		this.playlistTotalCount = playlistsPagingObject.total
+		updateUi(offset, this.playlistTotalCount)
 		const returnValue = [
       ...playlistsPagingObject.items,
-      ...(all && playlistsPagingObject.next && !DONT_FETCH_ALL_PLAYLISTS ? (await this.getPlaylists(offset + limit)) : []),
+      ...(playlistsPagingObject.next && !DONT_FETCH_ALL_PLAYLISTS ? (await this.getPlaylists(offset + limit, updateUi)) : []),
     ]
+		updateUi(this.playlistTotalCount, this.playlistTotalCount)
 		return returnValue
   }
 

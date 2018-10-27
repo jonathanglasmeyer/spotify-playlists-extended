@@ -10,15 +10,12 @@ import Header from './Header'
 import Artist from './Artist'
 import DetailView from './DetailView'
 import {NO_GENRE, SPOTIFY_PLAYLISTS_EXTENDED_CLIENT_ID, REDIRECT_URI, ESC} from './constants'
-import {
-  getAvgRating,
-  sanitize,
-  playlistCacheKey,
-  makeExtendedPlaylistObject,
-  getRelevantPlaylists,
-} from './utils'
+import {getAvgRating, sanitize, makeExtendedPlaylistObject, getRelevantPlaylists} from './utils'
 
 const MOCK = false
+const cachePlaylists = playlists => {
+  window.localStorage.setItem('playlists', JSON.stringify(playlists))
+}
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 const addPlaylistsForAlbums = async (albums, api, then) => {
@@ -62,6 +59,7 @@ class App extends Component {
     activeGenre: ?string,
     activeArtist: ?string,
     editingDescription: false,
+    debugString: string,
   } = {
     filter: '',
     activeGenre: null,
@@ -69,12 +67,10 @@ class App extends Component {
     open: MOCK,
     activeArtist: null,
     allPlaylistsFetched: false,
+    debugString: '',
   }
 
   componentDidMount() {
-    window.onpopstate = e => {
-      this.setState({detailsView: null, open: false, editingDescription: false})
-    }
 
     !MOCK && performAuthorizeRedirect.bind(this)()
     document.addEventListener(
@@ -142,86 +138,106 @@ class App extends Component {
       if (!playlists && !MOCK) return <div />
       return (
         <MuiThemeProvider theme={materialUITheme}>
-          <div className="App">
-						<div style={{position: 'fixed', top: 0, right: 0, fontSize: 10}}>v1</div>
-            <div>
-              {this.state.albumsWithNoMatchingPlaylist &&
-                this.state.albumsWithNoMatchingPlaylist.length && (
-                  <UnimportedAlbumsModal
-                    albums={this.state.albumsWithNoMatchingPlaylist}
-                    isImporting={this.state.importingAlbums}
-                    onClickImport={this._importPlaylistsFromAlbums}
-                  />
-                )}
-              <Header
-                playlists={playlists}
-                playlistsSearchResult={playlistsSearchResult}
-                filter={this.state.filter}
-                onChangeFilter={e => this.setState({filter: e.target.value})}
-                onChangeUnratedOnly={e => this.setState({unratedOnly: e.target.checked})}
-                onResetFilter={this._resetFilter}
-                activeGenre={this.state.activeGenre}
-                onChangeActiveGenre={genre =>
-                  this.setState({
-                    activeGenre: this.state.activeGenre === genre ? null : genre,
-                  })
-                }
+          <div className={`App ${this.state.activeArtist ? ' withActiveArtist' : ''}`}>
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                fontSize: 10,
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+              }}>
+              {this.state.debugString}
+            </div>
+            <div className="inner">
+              <div>
+                {this.state.albumsWithNoMatchingPlaylist &&
+                  this.state.albumsWithNoMatchingPlaylist.length && (
+                    <UnimportedAlbumsModal
+                      albums={this.state.albumsWithNoMatchingPlaylist}
+                      isImporting={this.state.importingAlbums}
+                      onClickImport={this._importPlaylistsFromAlbums}
+                    />
+                  )}
+                <Header
+                  playlists={playlists}
+                  playlistsSearchResult={playlistsSearchResult}
+                  filter={this.state.filter}
+                  onChangeFilter={e => this.setState({filter: e.target.value})}
+                  onChangeUnratedOnly={e => this.setState({unratedOnly: e.target.checked})}
+                  onResetFilter={this._resetFilter}
+                  activeGenre={this.state.activeGenre}
+                  onChangeActiveGenre={genre =>
+                    this.setState({
+                      activeGenre: this.state.activeGenre === genre ? null : genre,
+                    })
+                  }
+                />
+              </div>
+              {playlistsSearchResult &&
+                _.sortBy(
+                  _.entries(_.groupBy(playlistsSearchResult, p => p.name.split(' – ')[0])),
+                  ([name, playlists]) => {
+                    const pls = playlists
+                    const ratedPls = pls.filter(p => p.rating !== undefined)
+                    const hasRecent = pls.some(p => p.age < 0.1)
+
+                    const howRecent = _.min(pls.map(p => p.age)) / 0.1
+										const avgRating = getAvgRating(pls)
+                    const factor =
+											(avgRating ? (avgRating) : 0) + (ratedPls.length ? ratedPls.length / 3 : 0) + (hasRecent && howRecent !== undefined ? Math.min(1 / howRecent, 5) : 0)
+                    return 1 / factor
+                  }
+                ).map(([name, playlists]) => {
+                  return (
+                    <Artist
+                      key={name}
+                      api={this.api}
+                      name={name}
+                      playlists={playlists}
+                      onUpdateCertainPlaylistsWithDescriptions={updatedPlaylists => {
+                        const currentPlaylists = this.state.playlists
+                        const allPlaylistsUpdated = currentPlaylists.map(p => {
+                          const updatedPlaylist = updatedPlaylists.find(uP => uP.id === p.id)
+                          // don't muck around with age, seems to be weird with the `index` calculation coming from inside
+                          return updatedPlaylist ? {...updatedPlaylist, age: p.age} : p
+                        })
+                        cachePlaylists(allPlaylistsUpdated)
+                        this.setState({playlists: allPlaylistsUpdated})
+                      }}
+                      onOpenDetailsView={playlist => {
+                        window.history.pushState(null, null, '#details') // push state that hash into the url
+                        this.setState(
+                          {detailsView: playlist, open: true, editingDescription: false},
+                          async () => {
+                            const playlistFull = await this.api.getPlaylistFull(playlist.id)
+                            const extendedPlaylistFull = makeExtendedPlaylistObject(playlistFull)
+                            this.setState({detailsView: extendedPlaylistFull})
+                          }
+                        )
+                      }}
+                      isActive={this.state.activeArtist === name}
+                      onSetActiveArtist={() =>
+                        this.setState({
+                          activeArtist: this.state.activeArtist === name ? null : name,
+                        })
+                      }
+                    />
+                  )
+                })}
+              <DetailView
+								editingDescription={this.state.editingDescription}
+                open={this.state.open}
+                onChangeOpen={open => this.setState({open, editingDescription: !open, detailsView: null})}
+								onEditDescription={editingDescription => this.setState({editingDescription})}
+                onSubmitDescription={this._handleSubmitDescription}
+                detailsView={this.state.detailsView}
+                onUnsetDetailsView={() => this.setState({detailsView: null})}
+                onUpdateRating={this._handleUpdateRating}
+                onDeletePlaylist={this._handleDeletePlaylist}
+                onChangeGenre={this._handleChangeGenre}
               />
             </div>
-            {playlistsSearchResult &&
-              _.sortBy(
-                _.entries(_.groupBy(playlistsSearchResult, p => p.name.split(' – ')[0])),
-                ([name, playlists]) => {
-                  const pls = playlists
-                  const hasRecent = pls.some(p => p.age < 0.1)
-
-                  const howRecent = _.min(pls.map(p => p.age)) / 0.1
-                  const factor =
-                    getAvgRating(pls) + pls.length / 3 + (hasRecent ? 10 / howRecent : 0)
-                  return 1 / factor
-                }
-              ).map(([name, playlists]) => {
-                return (
-                  <Artist
-										key={name}
-										api={this.api}
-                    name={name}
-                    playlists={playlists}
-                    onOpenDetailsView={playlist => {
-                      window.history.pushState(null, null, '#details') // push state that hash into the url
-                      this.setState({detailsView: playlist, open: true}, async () => {
-                        const cacheKey = playlistCacheKey(playlist.id)
-                        const cachedPlaylist = JSON.parse(
-                          window.localStorage.getItem(cacheKey) || 'null'
-                        )
-                        if (cachedPlaylist) {
-                          this.setState({detailsView: cachedPlaylist})
-                        }
-                        const playlistFull = await this.api.getPlaylistFull(playlist.id)
-                        const extendedPlaylistFull = makeExtendedPlaylistObject(playlistFull)
-                        window.localStorage.setItem(cacheKey, JSON.stringify(extendedPlaylistFull))
-                        this.setState({detailsView: extendedPlaylistFull})
-                      })
-                    }}
-                    isActive={this.state.activeArtist === name}
-                    onSetActiveArtist={() =>
-                      this.setState({
-                        activeArtist: this.state.activeArtist === name ? null : name,
-                      })
-                    }
-                  />
-                )
-              })}
-            <DetailView
-              open={this.state.open}
-              onChangeOpen={open => this.setState({open})}
-              onSubmitDescription={this._handleSubmitDescription}
-              detailsView={this.state.detailsView}
-              onUnsetDetailsView={() => this.setState({detailsView: null})}
-              onUpdateRating={this._handleUpdateRating}
-              onDeletePlaylist={this._handleDeletePlaylist}
-              onChangeGenre={this._handleChangeGenre}
-            />
           </div>
         </MuiThemeProvider>
       )
@@ -232,10 +248,13 @@ class App extends Component {
   _handleSubmitDescription = value => {
     this.api.updatePlaylistDescription(this.state.detailsView.id, value)
     const newItem = {...this.state.detailsView, description: value}
-    window.localStorage.setItem(
-      playlistCacheKey(this.state.detailsView.id),
-      JSON.stringify(newItem)
-    )
+    const newPlaylists = this.state.playlists.map(p => {
+      return p.id === this.state.detailsView.id ? newItem : p
+    })
+    this.setState({
+      playlists: newPlaylists,
+    })
+    cachePlaylists(newPlaylists)
   }
 
   _handleChangeGenre = genre => {
@@ -245,15 +264,15 @@ class App extends Component {
     const playlistName = `${ratingFormatted} ${extendedPlaylist.name} ${genreFormatted}`
 
     this.api.updatePlaylistName(extendedPlaylist.id, playlistName)
-    this.setState(({playlists}) => ({
+    const newPlaylists = this.state.playlists.map(
+      p =>
+        p.id === extendedPlaylist.id ? {...p, originalName: playlistName, genre: genreFormatted} : p
+    )
+    this.setState({
       detailsView: {...extendedPlaylist, genre: genreFormatted.length ? genreFormatted : undefined},
-      playlists: playlists.map(
-        p =>
-          p.id === extendedPlaylist.id
-            ? {...p, originalName: playlistName, genre: genreFormatted}
-            : p
-      ),
-    }))
+      playlists: newPlaylists,
+    })
+		cachePlaylists(newPlaylists)
   }
 
   _handleUpdateRating = rating => {
@@ -261,12 +280,14 @@ class App extends Component {
     const playlistName = `(${rating}) ${extendedPlaylist.name} ${extendedPlaylist.genre}`
 
     this.api.updatePlaylistName(extendedPlaylist.id, playlistName)
-    this.setState(({playlists}) => ({
-      detailsView: {...extendedPlaylist, rating},
-      playlists: playlists.map(
+		const newPlaylists = this.state.playlists.map(
         p => (p.id === extendedPlaylist.id ? {...p, originalName: playlistName, rating} : p)
-      ),
-    }))
+      )
+    this.setState({
+      detailsView: {...extendedPlaylist, rating},
+      playlists: newPlaylists,
+    })
+		cachePlaylists(newPlaylists)
   }
 
   _handleDeletePlaylist = async () => {
@@ -278,11 +299,13 @@ class App extends Component {
       if (relatedAlbum) {
         await this.api.unsubscribeAlbum(relatedAlbum.id)
       }
-      this.setState(({playlists}) => ({
-        playlists: playlists.filter(p => p.id !== extendedPlaylist.id),
+			const newPlaylists = this.state.playlists.filter(p => p.id !== extendedPlaylist.id)
+      this.setState({
+        playlists: newPlaylists,
         editingDescription: false,
         open: false,
-      }))
+      })
+			cachePlaylists(newPlaylists)
     }
   }
 
@@ -293,11 +316,28 @@ class App extends Component {
   fetchPlaylists = async () => {
     const cachedPlaylists = JSON.parse(window.localStorage.getItem('playlists') || 'null')
     this.setState({playlists: cachedPlaylists})
-    const allPlaylists = await this.api.getPlaylists()
+    const allPlaylists = await this.api.getPlaylists(0, (currentOffset, overallPlaylistCount) => {
+      this.setState({
+        debugString:
+          currentOffset === overallPlaylistCount
+            ? ''
+            : `${(currentOffset * 100 / overallPlaylistCount).toFixed(0)}%`,
+      })
+    })
     const allPlaylistsExtended = getRelevantPlaylists(allPlaylists).map(makeExtendedPlaylistObject)
-    window.localStorage.setItem('playlists', JSON.stringify(allPlaylistsExtended))
-    this.setState({playlists: allPlaylistsExtended})
-    return allPlaylistsExtended
+
+    // Idea: If, during playlist fetching, i opened an artist, the descriptions fetched for that artist's albums
+    // shouldn't be discarded
+    const playlistsById = _.keyBy(this.state.playlists, 'id')
+    const allPlaylistsExtendedWithAlreadyFetchedDescriptions = allPlaylistsExtended.map(p => {
+      const description = _.get(playlistsById[p.id], 'description')
+      return description ? {...p, description} : p
+    })
+    this.setState({
+      playlists: allPlaylistsExtendedWithAlreadyFetchedDescriptions,
+    })
+    cachePlaylists(allPlaylistsExtendedWithAlreadyFetchedDescriptions)
+    return allPlaylistsExtendedWithAlreadyFetchedDescriptions
   }
 
   _importPlaylistsFromAlbums = async () => {

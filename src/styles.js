@@ -45,24 +45,6 @@ export const listStyles = {
 		padding: '3px 5px',
 	},
   rating: {
-		color: Colors.textSecondary,
-		marginTop: 2,
-  },
-	itemMainWrapper: {
-    marginLeft: 16,
-	},
-  itemTitle: {
-		display: 'block',
-    fontSize: FontSizes.body,
-    color: Colors.textPrimary,
-  },
-  itemGenre: {
-		display: 'block',
-		marginTop: 4,
-    marginLeft: 16,
-    // marginRight: 40,
-    fontSize: FontSizes.small,
-    color: Colors.textTertiary,
   },
 }
 

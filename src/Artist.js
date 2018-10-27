@@ -1,13 +1,11 @@
 import React from 'react'
 import _ from 'lodash'
-import {listStyles, isMobile} from './styles'
+import {isMobile} from './styles'
 import _uniqBy from 'lodash/uniqBy'
 import _findLast from 'lodash/findLast'
 import {SimpleRating, Star} from './components'
-import {albumIcon} from './icons'
 import {
   getAvgRating,
-  playlistCacheKey,
   makeExtendedPlaylistObject,
   artistImageUrlCacheKey,
 } from './utils'
@@ -25,16 +23,32 @@ class Artist extends React.Component {
     const cachedImageUrl = window.localStorage.getItem(artistImageUrlCacheKey(this.props.name))
     if (cachedImageUrl) {
       this.setState({artistImageUrl: cachedImageUrl})
-    }
-
-    const {artists} = await this.props.api.getArtist(this.props.name)
-    if (artists) {
-      const image = _findLast(_.get(artists, 'items[0].images') || [], image => image.width > 100)
-      const url = _.get(image, 'url')
-      window.localStorage.setItem(artistImageUrlCacheKey(this.props.name), url)
-      this.setState({artistImageUrl: url})
+    } else {
+      const {artists} = await this.props.api.getArtist(this.props.name)
+      if (artists) {
+        const image = _findLast(_.get(artists, 'items[0].images') || [], image => image.width > 100)
+        const url = _.get(image, 'url')
+        window.localStorage.setItem(artistImageUrlCacheKey(this.props.name), url)
+        this.setState({artistImageUrl: url})
+      }
     }
   }
+  async componentDidUpdate(prevProps) {
+		if (!prevProps.isActive && this.props.isActive) {
+			console.info('[Artist.js] this.elem: ', this.elem.getBoundingClientRect().top + window.scrollY);
+			const elemTop = this.elem.getBoundingClientRect().top + window.scrollY
+			window.scrollTo({top: elemTop - 10, behavior: 'instant'})
+			this.fetchDescriptions()
+		}
+	}
+
+	async fetchDescriptions() {
+		const fullPlaylists = await Promise.all(this.props.playlists.map(async (p, idx) => {
+			const playlistFull = await this.props.api.getPlaylistFull(p.id)
+			return makeExtendedPlaylistObject(playlistFull, idx, this.props.playlists)
+		}))
+		this.props.onUpdateCertainPlaylistsWithDescriptions(fullPlaylists)
+	}
 
   render() {
     const {name, playlists, onSetActiveArtist, isActive, onOpenDetailsView} = this.props
@@ -44,7 +58,7 @@ class Artist extends React.Component {
     const hasARating = _.some(pls, p => p.rating !== undefined)
     return (
       <div>
-        <div className="Artist" onClick={onSetActiveArtist}>
+				<div className="Artist" onClick={onSetActiveArtist} ref={(elem) => this.elem = elem}>
           {this.state.artistImageUrl ? (
             <div style={{position: 'relative'}}>
               <div
@@ -74,11 +88,14 @@ class Artist extends React.Component {
                   <span style={{marginRight: 2, display: 'inline-block'}}>
                     {Math.round(avgRating * 2) / 2}
                   </span>
-									<Star /><span style={{opacity: .3, display: 'inline-block', margin: '0 5px'}}>{'  '}</span>
+                  <Star />
+                  <span style={{opacity: 0.3, display: 'inline-block', margin: '0 5px'}}>
+                    {'  '}
+                  </span>
                 </span>
               )}
-							{/*
-								
+              {/*
+
               <div style={{position: 'relative', top: -1, display: 'inline-block', opacity: 0.4}}>
 								{_.times(pls.length, _.constant(<div className='album-icon'/>))}
               </div>{' '}
@@ -89,7 +106,7 @@ class Artist extends React.Component {
 
         {isActive && (
           <div className="Artist__albums">
-            {pls.map(playlist => {
+            {pls.map((playlist, idx) => {
               return (
                 <div
                   onClick={() => {
@@ -104,18 +121,17 @@ class Artist extends React.Component {
                     marginLeft: isMobile ? -20 : -10,
                     paddingLeft: isMobile ? 20 : 10,
                     paddingTop: 10,
-                    paddingBottom: 10,
+                    paddingBottom: idx === pls.length - 1 ? 0 : 10,
                   }}>
                   <img
                     alt="album-art"
                     className="Artist__album__image"
                     src={_.get(playlist, 'images[0].url')}
                   />
-                  <div style={listStyles.itemMainWrapper}>
-                    <span className="item-title" style={listStyles.itemTitle}>
-                      {playlist.name}
-                    </span>
+                  <div className='Artist__album_textWrapper'>
+                    <span className="item-title">{playlist.name}</span>
                     {playlist.rating && <SimpleRating rating={playlist.rating} />}
+										{playlist.description && <p className='Artist__album__description'>{playlist.description}</p>}
                   </div>
                 </div>
               )

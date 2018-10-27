@@ -14,17 +14,18 @@
 :root {
 	--gray1: hsl(233, 13%, 16%);
 	--gray1b: hsl(233, 13%, 22%);
-  --gray2: hsl(240, 5%, 45%);
+  --gray2: hsl(240, 8%, 48%);
   --gray3: hsl(235, 8%, 55%);
   --gray3Hover: hsl(235, 8%, 60%);
   --gray4: hsl(240, 12%, 75%);
   --gray5: hsl(240, 8%, 85%);
-  --gray6: hsl(240, 17%, 96%);
-  --gray6b: hsl(240, 12%, 97%);
-  --gray6c: hsl(240, 17%, 99%);
+  --gray6: hsl(240, 5%, 92%);
+  --gray6b: hsl(240, 8%, 98%);
+  --gray6c: hsl(240, 3%, 99%);
 
 	--textPrimary: var(--gray1);
 	--textSecondary: var(--gray2);
+	--textSecondaryInverse: var(--gray3);
 	--textTertiary: var(--gray4);
 	--borderColor: var(--gray6);
 	--backgroundColor: var(--gray5);
@@ -62,10 +63,19 @@ button:disabled {
 }
 
 .App {
-	max-width: 800px;
+	font-size: 16px;
+	background-color: white;
+	transition: background-color .2s;
+}
+@media screen and (max-width: 600px) {
+	.withActiveArtist {
+		background-color: rgba(0, 0, 0, .008);
+	}
+}
+.inner {
 	margin: 0 auto;
 	padding: 20px;
-	font-size: 16px;
+	max-width: 600px;
 }
 
 
@@ -90,7 +100,7 @@ html {
 	animation: fade-in 0.2s linear;
 	padding: 15px;
 	border: none;
-	background: var(--gray6);
+	background: var(--gray6b);
 	/* opacity: .8; */
 	outline: none;
 	border-radius: 5px;
@@ -98,11 +108,11 @@ html {
 }
 
 input:active {
-	background: var(--gray6);
+	background: var(--gray6b);
 }
 
 input:focus {
-	background: var(--gray6);
+	background: var(--gray6b);
 }
 
 .fab {
@@ -149,16 +159,17 @@ input:focus {
 	margin-bottom: 5px;
 	user-select: none;
 	cursor: pointer;
+	font-weight: 500;
 	background: var(--gray6b);
-	/* border: 1px solid var(--gray5); */
-	color: var(--gray1);
+	/* border: 1px solid var(--gray6); */
+	color: var(--gray2);
 	border-radius: 4px;
 	padding: 12px;
 }
 
 .genrepill:hover {
-	background: var(--gray6);
-	color: var(--gray2);
+	/* border: 1px solid hsl(240, 5%,95%); */
+	/* color: var(--gray2); */
 }
 
 .genrepill-active {
@@ -331,7 +342,7 @@ input[type="checkbox"] {
 	height: 48px;
 	padding-left: 15px;
 	padding-right: 12px;
-	background: var(--gray6);
+	background: var(--gray6b);
 	border-top-right-radius: 5px;
 	border-bottom-right-radius: 5px;
 	cursor: pointer;
@@ -361,10 +372,27 @@ input[type="checkbox"] {
 	transition: opacity .2s ease-out;
 }
 
+
 .album-art-full {
-	box-shadow: 1px 5px 40px -3px hsl(0, 10%, 75%);
-	border-radius: 5px;
+	/* box-shadow: 1px 5px 40px -3px hsl(0, 10%, 85%); */
+	border-radius: 3px;
 	width: 180px;
 	height: 180px;
 	/* height: isMobile ? window.innerWidth : undefined, */
+}
+
+@media screen and (min-width: 600px) {
+	.album-art-full-wrapper {
+			margin-bottom: 335px !important;
+		}
+	.album-art-full {
+		height: 400px;
+		width: 400px;
+		}
+	}
+
+.SimpleRating {
+	color: var(--textSecondary);
+	font-size: 12px;
+	margin-top: 5px;
 }

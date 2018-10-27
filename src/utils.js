@@ -6,8 +6,11 @@ export const getCountForGenre = (genre, extendedPlaylists) => {
   return extendedPlaylists.filter(extendedPlaylist => extendedPlaylist.genre === genre).length
 }
 
-export const getAvgRating = pls =>
-  (_sumBy(pls, 'rating') || 0) / pls.filter(p => p.rating !== undefined).length
+export const getAvgRating = pls => {
+	const overallRating = _sumBy(pls, 'rating')
+	return overallRating  && overallRating > 0 ?
+  (overallRating / pls.filter(p => p.rating !== undefined).length) : undefined
+}
 
 export const getAvgAge = pls =>
   (_sumBy(pls, 'age') || 0) / pls.length
@@ -21,6 +24,7 @@ const RATING_REGEX = /^\((1|1\.5|2|2\.5|3|3\.5|4|4\.5|5|5\.5)\)/
 const GENRE_REGEX = /(\.[a-z?]+)/
 
 export const makeExtendedPlaylistObject = (playlist, index, arr) => {
+	if (!playlist) return playlist
   const [, rating] = playlist.name.match(RATING_REGEX) || [, null] // eslint-disable-line
   const [, genre] = playlist.name.match(GENRE_REGEX) || [, null] // eslint-disable-line
   const foo = {

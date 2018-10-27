@@ -16,7 +16,7 @@ export const SPOTIFY_PLAYLISTS_EXTENDED_CLIENT_ID = process.env.REACT_APP_SPOTIF
 export const REDIRECT_URI =
   process.env.NODE_ENV === 'production'
     ? process.env.REACT_APP_PRODUCTION_URL
-    : 'http://localhost:3000'
+    : 'http://192.168.0.21:3000'
 
 export const ENTER = 13
 export const ESC = 27
