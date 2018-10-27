@@ -28,7 +28,6 @@ class DetailView extends React.Component {
 	// }
 	componentDidMount() {
     window.onpopstate = e => {
-			console.info('[DetailView.js] ', 'foo');
 			this.props.onSubmitDescription(this.textarea.value)
 			this.props.onChangeOpen(false)
       // this.setState({detailsView: null, open: false, editingDescription: false})

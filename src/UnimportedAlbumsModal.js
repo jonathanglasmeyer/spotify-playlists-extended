@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function UnimportedAlbumsModal({albums, isImporting, onClickImport}) {
+export default function UnimportedAlbumsModal({albums, onClickImport}) {
   return (
     <div className="bottom-overlay">
       <h4>Unimported albums</h4>
@@ -10,7 +10,7 @@ export default function UnimportedAlbumsModal({albums, isImporting, onClickImpor
         ))}
       </div>
       <div style={{marginTop: 20}}>
-        <button disabled={isImporting} onClick={onClickImport}>Import</button>
+        <button onClick={onClickImport}>Import</button>
       </div>
     </div>
   )

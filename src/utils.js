@@ -21,9 +21,12 @@ export const playlistCacheKey = id => `playlist-${id}`
 export const artistImageUrlCacheKey = id => `artist-image-url-${id}`
 
 const RATING_REGEX = /^\((1|1\.5|2|2\.5|3|3\.5|4|4\.5|5|5\.5)\)/
-const GENRE_REGEX = /(\.[a-z?]+)/
+const GENRE_REGEX = /\s(\.[a-z?]+)/
 
 export const makeExtendedPlaylistObject = (playlist, index, arr) => {
+	if (index === undefined) {
+		console.info('[utils.js] ', 'Cannot derive "age" without index');
+	}
 	if (!playlist) return playlist
   const [, rating] = playlist.name.match(RATING_REGEX) || [, null] // eslint-disable-line
   const [, genre] = playlist.name.match(GENRE_REGEX) || [, null] // eslint-disable-line

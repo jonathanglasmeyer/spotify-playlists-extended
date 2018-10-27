@@ -35,7 +35,6 @@ class Artist extends React.Component {
   }
   async componentDidUpdate(prevProps) {
 		if (!prevProps.isActive && this.props.isActive) {
-			console.info('[Artist.js] this.elem: ', this.elem.getBoundingClientRect().top + window.scrollY);
 			const elemTop = this.elem.getBoundingClientRect().top + window.scrollY
 			window.scrollTo({top: elemTop - 10, behavior: 'instant'})
 			this.fetchDescriptions()

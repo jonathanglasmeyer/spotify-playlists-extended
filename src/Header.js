@@ -68,7 +68,7 @@ const Header = ({
         {playlistsSearchResult && (
           <div style={{display: 'flex', justifyContent: 'space-between'}}>
             <span style={listStyles.resultsHint}>{`${
-              !filter ? playlists.length : playlistsSearchResult.length
+              !filter && !activeGenre ? playlists.length : playlistsSearchResult.length
             } result(s)`}</span>
             <FormControlLabel
               style={{marginTop: -20, marginRight: 2, zIndex: 0}}

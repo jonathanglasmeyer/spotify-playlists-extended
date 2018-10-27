@@ -1,4 +1,5 @@
 // ${userId}/playlists/${playlistId}/tracks
+import _ from 'lodash'
 import invariant from 'invariant'
 const urlJoin = require('url-join')
 const throttle = require('throttle-promise');
@@ -8,6 +9,11 @@ export const DONT_FETCH_ALL_PLAYLISTS = false && process.env.NODE_ENV !== 'produ
  export const DONT_FETCH_ALL_ALBUMS = false && process.env.NODE_ENV !== 'production'
 
 const rateLimitedFetch = throttle(fetch, 5, 1000);
+const decodeHTML = _.memoize((str) => {
+	var txt = document.createElement('textarea');
+	txt.innerHTML = str;
+	return txt.value;
+});
 
 const postprocessAlbum = (o) => {
   const album = o.album || o
@@ -63,10 +69,12 @@ class Api {
     )
 	}
 
-  getPlaylistFull = (id) => {
-    return this.fetch(
+  getPlaylistFull = async (id) => {
+    const p = await this.fetch(
 			`users/${this.userId}/playlists/${id}`
     )
+
+		return {...p, description: p.description ? decodeHTML(p.description) : p.description}
 	}
 
   updatePlaylistDescription = (id, description) => {

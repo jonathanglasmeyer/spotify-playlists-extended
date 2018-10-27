@@ -71,7 +71,6 @@ class App extends Component {
   }
 
   componentDidMount() {
-
     !MOCK && performAuthorizeRedirect.bind(this)()
     document.addEventListener(
       'keydown',
@@ -90,8 +89,7 @@ class App extends Component {
       const me = await this.api.getMe()
       this.setState({me})
     } else if (!prevState.me && this.state.me) {
-      const playlists = await this.fetchPlaylists()
-      const albums = await this.api.getAlbums()
+      const [playlists, albums] = await Promise.all([this.fetchPlaylists(), this.api.getAlbums()])
       this._albums = albums
       const albumsWithNoMatchingPlaylist = albums.filter(
         a => !playlists.some(p => sanitize(p.name).includes(sanitize(a.playlistName)))
@@ -123,6 +121,9 @@ class App extends Component {
           )
         }
       )
+		if (playlists && playlists.length && _.some(playlists => p => p.age === undefined)) {
+			return <div>There still is a programming error where playlist `age` is being lost. This will lead to unexpected sorting changes.</div>
+		}
     if (!this.state.accessToken && !MOCK) {
       return (
         <a
@@ -152,10 +153,9 @@ class App extends Component {
             <div className="inner">
               <div>
                 {this.state.albumsWithNoMatchingPlaylist &&
-                  this.state.albumsWithNoMatchingPlaylist.length && (
+                  this.state.albumsWithNoMatchingPlaylist.length && !this.state.importingAlbums &&(
                     <UnimportedAlbumsModal
                       albums={this.state.albumsWithNoMatchingPlaylist}
-                      isImporting={this.state.importingAlbums}
                       onClickImport={this._importPlaylistsFromAlbums}
                     />
                   )}
@@ -183,9 +183,11 @@ class App extends Component {
                     const hasRecent = pls.some(p => p.age < 0.1)
 
                     const howRecent = _.min(pls.map(p => p.age)) / 0.1
-										const avgRating = getAvgRating(pls)
+                    const avgRating = getAvgRating(pls)
                     const factor =
-											(avgRating ? (avgRating) : 0) + (ratedPls.length ? ratedPls.length / 3 : 0) + (hasRecent && howRecent !== undefined ? Math.min(1 / howRecent, 5) : 0)
+                      (avgRating ? avgRating : 0) +
+                      (ratedPls.length ? ratedPls.length / 3 : 0) +
+                      (hasRecent && howRecent !== undefined ? Math.min(1 / howRecent, 5) : 0)
                     return 1 / factor
                   }
                 ).map(([name, playlists]) => {
@@ -212,7 +214,7 @@ class App extends Component {
                           async () => {
                             const playlistFull = await this.api.getPlaylistFull(playlist.id)
                             const extendedPlaylistFull = makeExtendedPlaylistObject(playlistFull)
-                            this.setState({detailsView: extendedPlaylistFull})
+                            this.setState({detailsView: {...extendedPlaylistFull, age: this.state.detailsView.age}})
                           }
                         )
                       }}
@@ -226,10 +228,12 @@ class App extends Component {
                   )
                 })}
               <DetailView
-								editingDescription={this.state.editingDescription}
+                editingDescription={this.state.editingDescription}
                 open={this.state.open}
-                onChangeOpen={open => this.setState({open, editingDescription: !open, detailsView: null})}
-								onEditDescription={editingDescription => this.setState({editingDescription})}
+                onChangeOpen={open =>
+                  this.setState({open, editingDescription: !open, detailsView: null})
+                }
+                onEditDescription={editingDescription => this.setState({editingDescription})}
                 onSubmitDescription={this._handleSubmitDescription}
                 detailsView={this.state.detailsView}
                 onUnsetDetailsView={() => this.setState({detailsView: null})}
@@ -272,7 +276,7 @@ class App extends Component {
       detailsView: {...extendedPlaylist, genre: genreFormatted.length ? genreFormatted : undefined},
       playlists: newPlaylists,
     })
-		cachePlaylists(newPlaylists)
+    cachePlaylists(newPlaylists)
   }
 
   _handleUpdateRating = rating => {
@@ -280,14 +284,14 @@ class App extends Component {
     const playlistName = `(${rating}) ${extendedPlaylist.name} ${extendedPlaylist.genre}`
 
     this.api.updatePlaylistName(extendedPlaylist.id, playlistName)
-		const newPlaylists = this.state.playlists.map(
-        p => (p.id === extendedPlaylist.id ? {...p, originalName: playlistName, rating} : p)
-      )
+    const newPlaylists = this.state.playlists.map(
+      p => (p.id === extendedPlaylist.id ? {...p, originalName: playlistName, rating} : p)
+    )
     this.setState({
       detailsView: {...extendedPlaylist, rating},
       playlists: newPlaylists,
     })
-		cachePlaylists(newPlaylists)
+    cachePlaylists(newPlaylists)
   }
 
   _handleDeletePlaylist = async () => {
@@ -299,13 +303,13 @@ class App extends Component {
       if (relatedAlbum) {
         await this.api.unsubscribeAlbum(relatedAlbum.id)
       }
-			const newPlaylists = this.state.playlists.filter(p => p.id !== extendedPlaylist.id)
+      const newPlaylists = this.state.playlists.filter(p => p.id !== extendedPlaylist.id)
       this.setState({
         playlists: newPlaylists,
         editingDescription: false,
         open: false,
       })
-			cachePlaylists(newPlaylists)
+      cachePlaylists(newPlaylists)
     }
   }
 
@@ -341,10 +345,10 @@ class App extends Component {
   }
 
   _importPlaylistsFromAlbums = async () => {
-    this.setState({importingAlbums: true})
+    this.setState({importingAlbums: true, debugString: 'Importing...'})
     addPlaylistsForAlbums(this.state.albumsWithNoMatchingPlaylist, this.api, async () => {
       await this.fetchPlaylists()
-      this.setState({importingAlbums: false})
+      this.setState({importingAlbums: false, debugString: ''})
       this.setState({albumsWithNoMatchingPlaylist: null})
     })
   }
