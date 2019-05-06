@@ -1,5 +1,6 @@
 :root {
-	--albumSize: 120px;
+	--albumSize: 220px;
+	--albumSizeMobile: 160px;
 }
 
 .Artists {
@@ -62,7 +63,9 @@
 }
 
 .item-title {
-	color: var(--textPrimary);
+	color: white;
+	font-weight:500;
+	font-size: var(--fontSizeSmall);
 	display: block;
 }
 
@@ -81,13 +84,27 @@
 
 		width: var(--albumSize);
 		height: var(--albumSize);
+		position: relative;
+}
+
+@media screen and (max-width: 600px) {
+	.Artist__album {
+		width: var(--albumSizeMobile);
+		height: var(--albumSizeMobile);
+	}
 }
 
 .Artist__album img {
 	width: var(--albumSize);
 	height: var(--albumSize);
 	background-color: var(--backgroundColor);
-	 transition: all .3s ease-in-out;
+	 transition: all .35s ease-in-out;
+}
+@media screen and (max-width: 600px) {
+	.Artist__album img {
+		width: var(--albumSizeMobile);
+		height: var(--albumSizeMobile);
+	}
 }
 
 
@@ -97,10 +114,10 @@
 
 .Artist__album__description {
 	margin: 6px 0px 0 0;
-	opacity: .85;
+	/* opacity: .85; */
 	max-width: 280px;
-	font-size: var(--fontSizeBody);
-	color: var(--textSecondary);
+	font-size: var(--fontSizeSmall);
+	color: white;
 }
 
 .Artist__album .Artist__album-title {
@@ -108,6 +125,7 @@
 	opacity: .9;
 	 transition: all .3s ease-in-out;
 }
+
 @media screen and (min-width: 600px) {
 	.Artist__album:hover .Artist__album-title {
 		color: #000 !important;
@@ -129,32 +147,36 @@
 	background-color: var(--backgroundColor);
 }
 
+@media screen and (max-width: 600px) {
+	.Artist__album__image {
+		width: var(--albumSizeMobile);
+		height: var(--albumSizeMobile);
+	}
+}
+
+.Artist__album_textWrapper {
+	pointer-events: none;
+	transform: scale(1.01);
+	opacity: 0;
+	transition: opacity .23s ease-out;
+	position: absolute;
+	bottom: 0;
+	background: rgba(0, 0, 0, .7);
+	border-bottom-right-radius: 4px;
+	border-bottom-left-radius: 4px;
+	/* border-radius: 4px; */
+	left: -20px;
+	right: -20px;
+	padding: 10px 20px;
+}
+
+.Artist__album__image:hover + .Artist__album_textWrapper {
+	opacity: 1;
+}
+
 @media screen and (min-width: 600px) {
 	.Artist__album__image {
 		width: 100px;
 		height: 100px;
 	}
-}
-
-.Artist__recentlyChangedBlob {
-	display: inline-block;
-	background: #111;
-	margin-right: 6px;
-	background: #000;
-	border-radius: 50%;
-	opacity: .8;
-	position: relative;
-	top: -1.5px;
-	width: 6px;
-	height: 6px;
-}
-
-.album-icon {
-	width: 8px;
-	height: 8px;
-	background-color: white;
-	border-radius: 50%;
-	display: inline-block;
-	border: 2px solid #444;
-	margin-right: 2px;
 }

@@ -74,12 +74,6 @@ class Artist extends React.Component {
                   </span>
                 </span>
               )}
-              {/*
-
-              <div style={{position: 'relative', top: -1, display: 'inline-block', opacity: 0.4}}>
-								{_.times(pls.length, _.constant(<div className='album-icon'/>))}
-              </div>{' '}
-							*/}
             </div>
           </div>
         </div>
@@ -99,7 +93,6 @@ class Artist extends React.Component {
                   src={_.get(playlist, 'images[0].url')}
                 />
 
-										{/*
                 <div className="Artist__album_textWrapper">
                   <span className="item-title">{playlist.name}</span>
                   {playlist.rating && <SimpleRating rating={playlist.rating} />}
@@ -107,7 +100,6 @@ class Artist extends React.Component {
                     <p className="Artist__album__description">{playlist.description}</p>
                   )}
                 </div>
-										*/}
               </div>
             )
           })}
