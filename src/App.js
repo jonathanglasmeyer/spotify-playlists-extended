@@ -121,9 +121,14 @@ class App extends Component {
           )
         }
       )
-		if (playlists && playlists.length && _.some(playlists => p => p.age === undefined)) {
-			return <div>There still is a programming error where playlist `age` is being lost. This will lead to unexpected sorting changes.</div>
-		}
+    if (playlists && playlists.length && _.some(playlists => p => p.age === undefined)) {
+      return (
+        <div>
+          There still is a programming error where playlist `age` is being lost. This will lead to
+          unexpected sorting changes.
+        </div>
+      )
+    }
     if (!this.state.accessToken && !MOCK) {
       return (
         <a
@@ -153,7 +158,8 @@ class App extends Component {
             <div className="inner">
               <div>
                 {this.state.albumsWithNoMatchingPlaylist &&
-                  this.state.albumsWithNoMatchingPlaylist.length && !this.state.importingAlbums &&(
+                  this.state.albumsWithNoMatchingPlaylist.length &&
+                  !this.state.importingAlbums && (
                     <UnimportedAlbumsModal
                       albums={this.state.albumsWithNoMatchingPlaylist}
                       onClickImport={this._importPlaylistsFromAlbums}
@@ -214,7 +220,12 @@ class App extends Component {
                           async () => {
                             const playlistFull = await this.api.getPlaylistFull(playlist.id)
                             const extendedPlaylistFull = makeExtendedPlaylistObject(playlistFull)
-                            this.setState({detailsView: {...extendedPlaylistFull, age: this.state.detailsView.age}})
+                            this.setState({
+                              detailsView: {
+                                ...extendedPlaylistFull,
+                                age: this.state.detailsView.age,
+                              },
+                            })
                           }
                         )
                       }}
@@ -268,9 +279,8 @@ class App extends Component {
     const playlistName = `${ratingFormatted} ${extendedPlaylist.name} ${genreFormatted}`
 
     this.api.updatePlaylistName(extendedPlaylist.id, playlistName)
-    const newPlaylists = this.state.playlists.map(
-      p =>
-        p.id === extendedPlaylist.id ? {...p, originalName: playlistName, genre: genreFormatted} : p
+    const newPlaylists = this.state.playlists.map(p =>
+      p.id === extendedPlaylist.id ? {...p, originalName: playlistName, genre: genreFormatted} : p
     )
     this.setState({
       detailsView: {...extendedPlaylist, genre: genreFormatted.length ? genreFormatted : undefined},
@@ -284,8 +294,8 @@ class App extends Component {
     const playlistName = `(${rating}) ${extendedPlaylist.name} ${extendedPlaylist.genre}`
 
     this.api.updatePlaylistName(extendedPlaylist.id, playlistName)
-    const newPlaylists = this.state.playlists.map(
-      p => (p.id === extendedPlaylist.id ? {...p, originalName: playlistName, rating} : p)
+    const newPlaylists = this.state.playlists.map(p =>
+      p.id === extendedPlaylist.id ? {...p, originalName: playlistName, rating} : p
     )
     this.setState({
       detailsView: {...extendedPlaylist, rating},
@@ -325,7 +335,7 @@ class App extends Component {
         debugString:
           currentOffset === overallPlaylistCount
             ? ''
-            : `${(currentOffset * 100 / overallPlaylistCount).toFixed(0)}%`,
+            : `${((currentOffset * 100) / overallPlaylistCount).toFixed(0)}%`,
       })
     })
     const allPlaylistsExtended = getRelevantPlaylists(allPlaylists).map(makeExtendedPlaylistObject)
