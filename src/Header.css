@@ -1,0 +1,46 @@
+.Header_genrePillsWrapper {
+	margin-bottom: 10px;
+}
+
+.Header__resultsHint {
+	color: var(--textTertiary);
+	font-size: var(--fontSizeSmall);
+}
+
+.genrepill {
+	outline: none;
+	font-size: var(--fontSizeBody);
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+	animation: fade-in 0.2s linear;
+	display: inline-block;
+	margin-right: 8px;
+	margin-bottom: 8px;
+	user-select: none;
+	cursor: pointer;
+	/* font-weight: 500; */
+	background: var(--backgroundColor2);
+	color: var(--textSecondary);
+	border-radius: 4px;
+	padding: 10px 12px;
+}
+
+.genrepill:hover {
+	/* border: 1px solid hsl(240, 5%,95%); */
+	/* color: var(--gray2); */
+}
+
+.genrepill-active {
+	border: none;
+	color: white;
+	background: var(--genrepillActive);
+}
+
+.genrepill-active:hover {
+	color: white;
+	background: var(--genrepillActive);
+}
+
+.Header__unratedOnlyLabel {
+	color: var(--textSecondary) !important;
+	font-size: var(--fontSizeSmall) !important;
+}

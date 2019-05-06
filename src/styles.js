@@ -31,9 +31,6 @@ export const listStyles = {
 		color: Colors.textTertiary,
 		fontSize: FontSizes.hint,
 	},
-	genrePills: {
-		marginBottom: 10,
-	},
 	genrePill: {
 		display: 'inline-block',
 		marginRight: 5,

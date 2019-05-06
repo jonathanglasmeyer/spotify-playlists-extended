@@ -2,7 +2,7 @@
   "name": "spotify-playlists-extended",
   "version": "0.1.0",
   "private": true,
-	"homepage": "http://jonathanglasmeyer.github.io/spotify-playlists-extended",
+  "homepage": "http://jonathanglasmeyer.github.io/spotify-playlists-extended",
   "dependencies": {
     "@material-ui/core": "^1.2.1",
     "classnames": "^2.2.5",

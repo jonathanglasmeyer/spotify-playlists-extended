@@ -6,6 +6,7 @@ import {GENRES} from './constants'
 import {listStyles} from './styles'
 import {crossIcon} from './icons'
 import {getCountForGenre} from './utils'
+import './Header.css'
 
 const Header = ({
   playlists,
@@ -23,7 +24,7 @@ const Header = ({
       {/*
         Genre Pills
       */}
-      <div style={listStyles.genrePills}>
+      <div className='Header_genrePillsWrapper'>
         {Object.keys(GENRES).map(genre => {
           return (
             <div
@@ -67,10 +68,11 @@ const Header = ({
 
         {playlistsSearchResult && (
           <div style={{display: 'flex', justifyContent: 'space-between'}}>
-            <span style={listStyles.resultsHint}>{`${
+            <span className='Header__resultsHint'>{`${
               !filter && !activeGenre ? playlists.length : playlistsSearchResult.length
-            } result(s)`}</span>
+						} result${playlistsSearchResult.length > 1 || playlistsSearchResult.length === 0 ? 's' : ''}`}</span>
             <FormControlLabel
+							classes={{label: 'Header__unratedOnlyLabel'}}
               style={{marginTop: -20, marginRight: 2, zIndex: 0}}
               control={
                 <Switch

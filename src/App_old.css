@@ -11,36 +11,29 @@
 		-webkit-tap-highlight-color: rgba(0, 0, 0, 0.03);
 }
 
-
 :root {
-	--__gray100: #17172A;
-	--__gray100b: #31333f;
-  --__gray500: hsl(240, 8%, 48%);
-  --__gray600: hsl(240, 12%, 75%);
-  --__gray800: #E5E5EC;
-  --__gray1000: #F7F7FA;
-  --__gray1100: #FAFAFC;
+	--gray1: hsl(233, 13%, 16%);
+	--gray1b: hsl(233, 13%, 22%);
+  --gray2: hsl(240, 8%, 48%);
+  --gray3: hsl(235, 8%, 55%);
+  --gray3Hover: hsl(235, 8%, 60%);
+  --gray4: hsl(240, 12%, 75%);
+  --gray5: hsl(240, 8%, 85%);
+  --gray6: hsl(240, 5%, 92%);
+  --gray6b: hsl(240, 8%, 98%);
+  --gray6c: hsl(240, 3%, 99%);
 
-	--textPrimary: var(--__gray100);
-	--primaryColor: var(--__gray100);
-	--textSecondary: var(--__gray500);
-	--textTertiary: var(--__gray600);
-	--borderColor: var(--__gray800);
-	--backgroundColor: var(--__gray1000);
-	--backgroundColor2: var(--__gray1100);
-	--genrepill: var(--__gray1100);
-	--genrepillActive: var(--__gray100b);
-
-	--fontSizeHeader: 16px;
-	--fontSizeBody: 14px;
-	--fontSizeSmall: 13px;
-}
-body {
-	font-size: var(--fontSizeBody);
+	--textPrimary: var(--gray1);
+	--textSecondary: var(--gray2);
+	--textSecondaryInverse: var(--gray3);
+	--textTertiary: var(--gray4);
+	--borderColor: var(--gray6);
+	--backgroundColor: var(--gray5);
+	--backgroundColor2: var(--gray6);
+	--fontSizeSmall: 14px;
 }
 
 input[type="search"] {
-	font-size: var(--fontSizeBody);
 	-webkit-appearance: none;
 	-webkit-border-radius: 0;
 	margin: 0px;
@@ -107,25 +100,19 @@ html {
 	animation: fade-in 0.2s linear;
 	padding: 15px;
 	border: none;
-	background: var(--backgroundColor);
+	background: var(--gray6b);
 	/* opacity: .8; */
 	outline: none;
 	border-radius: 5px;
 	font-size: 16px;
 }
 
-::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: var(--textTertiary);
-		font-size: var(--fontSizeBody);
-    opacity: 1; /* Firefox */
-}
-
 input:active {
-	background: var(--backgroundColor);
+	background: var(--gray6b);
 }
 
 input:focus {
-	background: var(--backgroundColor);
+	background: var(--gray6b);
 }
 
 .fab {
@@ -133,7 +120,7 @@ input:focus {
 	align-items: center;
 	justify-content: center;
 	/* background: hsl(215, 8%, 85%); */
-	background: var(--primaryColor);
+	background: var(--gray1);
 	border-radius: 4px;
 	/* margin: 0 auto; */
 	box-shadow: rgba(0, 0, 0, 0.1) 0px 3px 10px, rgba(0, 0, 0, 0.16) 0px 3px 10px;
@@ -162,12 +149,49 @@ input:focus {
 	/* opacity: .8; */
 }
 
+.genrepill {
+	outline: none;
+	font-size: 14px;
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+	animation: fade-in 0.2s linear;
+	display: inline-block;
+	margin-right: 5px;
+	margin-bottom: 5px;
+	user-select: none;
+	cursor: pointer;
+	font-weight: 500;
+	background: var(--gray6b);
+	/* border: 1px solid var(--gray6); */
+	color: var(--gray2);
+	border-radius: 4px;
+	padding: 12px;
+}
+
+.genrepill:hover {
+	/* border: 1px solid hsl(240, 5%,95%); */
+	/* color: var(--gray2); */
+}
+
+.genrepill-active {
+	border: none;
+	color: white;
+	background: var(--gray1b);
+}
+.genrepill-active:hover {
+	color: white;
+	background: var(--gray1b);
+}
+
 textarea:focus {
 	outline: none;
+	/* border: 1px solid var(--gray5); */
 }
 textarea {
 	animation: fade-in .4s;
+	/* background: var(--gray6b); */
+	/* padding: 5px; */
 	border: none;
+	/* border: 1px solid var(--gray5); */
 	border-radius: 4px;
 	outline: none;
 	overflow-y: auto;
@@ -259,7 +283,7 @@ textarea {
 	cursor: pointer;
 }
 .dropdown-list-item:hover {
-	background: var(--backgroundColor);
+	background: var(--gray6b);
 }
 
 .dropdown-list-item:first-child {
@@ -290,11 +314,24 @@ textarea {
 	margin-top: 10px;
 }
 
-/* input[type="checkbox"] { */
-/* 	position: relative; */
-/* 	top: 1px; */
-/* 	margin-left: 10px; */
+/* label { */
+/* 	font-size: 12px; */
+/* 	margin-top: -10px; */
+/* 	padding-top: 10px; */
+/* 	padding-left: 5px; */
+/* 	padding-bottom: 10px; */
+/* 	color: var(--gray3); */
+/* 	user-select: none; */
+/* 	padding-right: 5px; */
+/* 	/* margin-right: 5px; */ */
+/* 	margin-bottom: 5px; */
 /* } */
+
+input[type="checkbox"] {
+	position: relative;
+	top: 1px;
+	margin-left: 10px;
+}
 
 .input-cross-icon {
 	position: absolute;
