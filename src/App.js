@@ -57,7 +57,6 @@ class App extends Component {
     allPlaylistsFetched: boolean,
     importingAlbums: boolean,
     activeGenre: ?string,
-    activeArtist: ?string,
     editingDescription: false,
     debugString: string,
   } = {
@@ -65,7 +64,6 @@ class App extends Component {
     activeGenre: null,
     detailsView: MOCK ? MOCK_DETAIL : null,
     open: MOCK,
-    activeArtist: null,
     allPlaylistsFetched: false,
     debugString: '',
   }
@@ -144,7 +142,7 @@ class App extends Component {
       if (!playlists && !MOCK) return <div />
       return (
         <MuiThemeProvider theme={materialUITheme}>
-          <div className={`App ${this.state.activeArtist ? ' withActiveArtist' : ''}`}>
+          <div className='App'>
             <div
               style={{
                 position: 'fixed',
@@ -229,12 +227,6 @@ class App extends Component {
                           }
                         )
                       }}
-                      isActive={this.state.activeArtist === name}
-                      onSetActiveArtist={() =>
-                        this.setState({
-                          activeArtist: this.state.activeArtist === name ? null : name,
-                        })
-                      }
                     />
                   )
                 })}
